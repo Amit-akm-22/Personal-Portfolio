@@ -16,6 +16,7 @@ const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(false);
   const [showSoundHint, setShowSoundHint] = useState(true);
+  const [needsPlaybackConsent, setNeedsPlaybackConsent] = useState(false);
 
   // Auto-hide "Tap for sound" hint after 5 seconds
   useEffect(() => {
@@ -33,12 +34,11 @@ const HeroSection = () => {
     try {
       await video.play();
       setShowSoundHint(false);
+      setNeedsPlaybackConsent(false);
       return true;
     } catch {
-      video.muted = true;
-      setMuted(true);
       setShowSoundHint(true);
-      await video.play().catch(() => undefined);
+      setNeedsPlaybackConsent(true);
       return false;
     }
   };
@@ -111,6 +111,7 @@ const HeroSection = () => {
     v.muted = !v.muted;
     setMuted(v.muted);
     setShowSoundHint(false);
+    setNeedsPlaybackConsent(false);
     const sectionBottom = sectionRef.current?.getBoundingClientRect().bottom ?? 0;
     if (v.paused && sectionBottom > 0) {
       v.play().catch(() => undefined);
@@ -135,6 +136,18 @@ const HeroSection = () => {
       {/* Cinematic gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-black/40" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/70" />
+
+      {needsPlaybackConsent && (
+        <button
+          onClick={playUnmuted}
+          className="absolute inset-0 z-20 grid place-items-center bg-black/20 text-white backdrop-blur-[1px] transition hover:bg-black/10"
+          aria-label="Start video with sound"
+        >
+          <span className="rounded-full border border-white/20 bg-white/10 px-7 py-3 text-xs font-bold uppercase tracking-[0.24em] shadow-[0_18px_45px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:bg-white/20">
+            Enter
+          </span>
+        </button>
+      )}
 
       {/* Content layer */}
       <div className="relative z-10 flex h-full flex-col">
