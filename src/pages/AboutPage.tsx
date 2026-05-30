@@ -11,7 +11,7 @@ const AboutPage = () => {
         </Link>
       </nav>
       
-      <div className="pt-20">
+      <div>
         <AboutSection />
       </div>
     </main>

@@ -1,3 +1,5 @@
+import educationData from '../../server/data/education.json';
+
 export interface EducationData {
   id: string;
   number: string;
@@ -10,4 +12,4 @@ export interface EducationData {
   accent: string;
 }
 
-export const EDUCATION: EducationData[] = [];
+export const EDUCATION = educationData as EducationData[];

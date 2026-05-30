@@ -1,4 +1,5 @@
 import cors from 'cors';
+import crypto from 'crypto';
 import express from 'express';
 import fs from 'fs/promises';
 import multer from 'multer';
@@ -13,6 +14,9 @@ const uploadsDir = path.join(rootDir, 'public', 'uploads');
 
 const app = express();
 const port = process.env.PORT || 4000;
+const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+const adminSessions = new Set();
 
 const files = {
   projects: path.join(dataDir, 'projects.json'),
@@ -48,6 +52,23 @@ const upload = multer({ storage });
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
+
+const createToken = () => crypto.randomBytes(32).toString('hex');
+const getBearerToken = (req) => {
+  const authHeader = req.get('authorization') || '';
+  const [scheme, token] = authHeader.split(' ');
+  return scheme?.toLowerCase() === 'bearer' ? token : '';
+};
+
+const requireAdmin = (req, res, next) => {
+  const token = getBearerToken(req);
+
+  if (!token || !adminSessions.has(token)) {
+    return res.status(401).json({ message: 'Admin authentication required' });
+  }
+
+  return next();
+};
 
 const readItems = async (type) => JSON.parse(await fs.readFile(files[type], 'utf8'));
 const writeItems = async (type, items) => {
@@ -126,8 +147,12 @@ const buildProject = (body, files = {}, existing = {}, count = 0) => {
   };
 };
 
-const buildAchievement = (body, file, existing = {}, count = 0) => {
+const buildAchievement = (body, files = {}, existing = {}, count = 0) => {
+  const image = uploadPath(files?.image?.[0]);
+  const galleryImages = uploadedPaths(files?.galleryImages);
   const title = body.title || existing.title || 'Untitled Achievement';
+  const nextImage = image || existing.image || galleryImages[0] || '';
+  const nextGallery = galleryImages.length ? galleryImages : existing.galleryImages || (nextImage ? [nextImage] : []);
 
   return {
     ...existing,
@@ -142,7 +167,8 @@ const buildAchievement = (body, file, existing = {}, count = 0) => {
     highlights: splitList(body.highlights).length ? splitList(body.highlights) : existing.highlights || [],
     skills: splitList(body.skills).length ? splitList(body.skills) : existing.skills || [],
     certificateUrl: body.certificateUrl || existing.certificateUrl || '',
-    image: uploadPath(file) || existing.image || '',
+    image: nextImage,
+    galleryImages: nextGallery,
     accent: body.accent || existing.accent || '#4ADE80',
   };
 };
@@ -216,6 +242,23 @@ const buildBlog = (body, file, existing = {}, count = 0) => {
   };
 };
 
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body || {};
+
+  if (username !== adminUsername || password !== adminPassword) {
+    return res.status(401).json({ message: 'Invalid username or password' });
+  }
+
+  const token = createToken();
+  adminSessions.add(token);
+  res.json({ token });
+});
+
+app.post('/api/auth/logout', requireAdmin, (req, res) => {
+  adminSessions.delete(getBearerToken(req));
+  res.json({ ok: true });
+});
+
 app.get('/api/content', async (_req, res) => {
   const [projects, achievements, certificates, blogs, education] = await Promise.all([
     readItems('projects'),
@@ -234,6 +277,11 @@ app.get('/api/:type', async (req, res) => {
   res.json(await readItems(type));
 });
 
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET' || req.path.startsWith('/auth/')) return next();
+  return requireAdmin(req, res, next);
+});
+
 app.post(
   '/api/projects',
   upload.fields([
@@ -250,14 +298,21 @@ app.post(
   }
 );
 
-app.post('/api/achievements', upload.single('image'), async (req, res) => {
-  const items = await readItems('achievements');
-  const achievement = buildAchievement(req.body, req.file, {}, items.length);
+app.post(
+  '/api/achievements',
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'galleryImages', maxCount: 8 },
+  ]),
+  async (req, res) => {
+    const items = await readItems('achievements');
+    const achievement = buildAchievement(req.body, req.files, {}, items.length);
 
-  items.unshift(achievement);
-  await writeItems('achievements', renumber(items));
-  res.status(201).json(achievement);
-});
+    items.unshift(achievement);
+    await writeItems('achievements', renumber(items));
+    res.status(201).json(achievement);
+  }
+);
 
 app.post('/api/certificates', upload.single('image'), async (req, res) => {
   const items = await readItems('certificates');
@@ -303,15 +358,22 @@ app.put(
   }
 );
 
-app.put('/api/achievements/:id', upload.single('image'), async (req, res) => {
-  const items = await readItems('achievements');
-  const index = items.findIndex((item) => item.id === req.params.id);
-  if (index === -1) return res.status(404).json({ message: 'Achievement not found' });
+app.put(
+  '/api/achievements/:id',
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'galleryImages', maxCount: 8 },
+  ]),
+  async (req, res) => {
+    const items = await readItems('achievements');
+    const index = items.findIndex((item) => item.id === req.params.id);
+    if (index === -1) return res.status(404).json({ message: 'Achievement not found' });
 
-  items[index] = buildAchievement(req.body, req.file, items[index], index);
-  await writeItems('achievements', renumber(items));
-  res.json(items[index]);
-});
+    items[index] = buildAchievement(req.body, req.files, items[index], index);
+    await writeItems('achievements', renumber(items));
+    res.json(items[index]);
+  }
+);
 
 app.put('/api/certificates/:id', upload.single('image'), async (req, res) => {
   const items = await readItems('certificates');
@@ -372,6 +434,16 @@ app.delete('/api/:type/:id', async (req, res) => {
 
   await writeItems(type, renumber(nextItems));
   res.json({ ok: true });
+});
+
+app.use((error, _req, res, _next) => {
+  console.error(error);
+
+  if (error instanceof multer.MulterError) {
+    return res.status(400).json({ message: error.message, field: error.field });
+  }
+
+  return res.status(500).json({ message: 'Internal server error' });
 });
 
 app.listen(port, () => {

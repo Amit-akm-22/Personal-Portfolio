@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "id": "1st-runner-up-tit-technotsav-challenge-2026",
+    "number": "01",
+    "title": "1st Runner-Up – TIT Technotsav Challenge 2026",
+    "issuer": "Technocrats Institute of Technology (TIT), Bhopal",
+    "date": "2026",
+    "category": "National Level Hackathon / Innovation Challenge",
+    "summary": "Secured 1st Runner-Up position in the TIT Technotsav Challenge 2026 hosted by Technocrats Institute of Technology (TIT), Bhopal. Awarded a ₹15,000 cash prize for delivering an innovative and impactful solution, demonstrating strong technical expertise, teamwork, and presentation skills.",
+    "details": "Participated in the TIT Technotsav Challenge 2026 organized by Technocrats Institute of Technology (TIT), Bhopal. As part of a collaborative team, developed and presented an innovative solution addressing real-world challenges. The project was recognized for its technical implementation, creativity, and overall impact, earning the team the 1st Runner-Up position and a ₹15,000 cash prize. This achievement highlights excellence in problem-solving, software development, teamwork, and effective project presentation in a competitive environment.",
+    "highlights": [
+      "Secured 1st Runner-Up Position",
+      "Won ₹15",
+      "000 Cash Prize",
+      "Presented Innovative Solution",
+      "Competed in Technotsav Challenge 2026"
+    ],
+    "skills": [
+      "Problem Solving",
+      "Full-Stack Development",
+      "Teamwork",
+      "Innovation",
+      "Project Presentation"
+    ],
+    "certificateUrl": "",
+    "image": "/uploads/1780156481196-Screenshot-2026-05-30-212427.png",
+    "accent": "#4ADE80",
+    "galleryImages": [
+      "/uploads/1780156764905-Screenshot-2026-05-30-212902.png"
+    ]
+  }
+]

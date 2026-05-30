@@ -1,10 +1,9 @@
-import { Mail, MessageCircle, Linkedin, Github, ArrowUpRight } from 'lucide-react';
+import { Mail, MessageCircle, Linkedin, Github } from 'lucide-react';
 import FadeIn from './FadeIn';
 
 interface ContactMethod {
   icon: typeof Mail;
   label: string;
-  value: string;
   href: string;
   accent: string;
 }
@@ -13,28 +12,24 @@ const CONTACT_METHODS: ContactMethod[] = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'amit.akm.work@gmail.com',
     href: 'mailto:amit.akm.work@gmail.com',
     accent: '#7EB8F7',
   },
   {
     icon: MessageCircle,
     label: 'WhatsApp',
-    value: '+91 6264677098',
     href: 'https://wa.me/6264677098',
     accent: '#4ADE80',
   },
   {
     icon: Linkedin,
     label: 'LinkedIn',
-    value: 'in/harsh-goyal-7900b2256',
     href: 'https://www.linkedin.com/in/amit-manmode',
     accent: '#60A5FA',
   },
   {
     icon: Github,
     label: 'GitHub',
-    value: '@harshgoyal27',
     href: 'https://github.com/Amit-akm-22',
     accent: '#D7E2EA',
   },
@@ -64,7 +59,7 @@ const ContactSection = () => {
         </p>
       </FadeIn>
 
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-5 sm:gap-7">
         {CONTACT_METHODS.map((method, i) => {
           const Icon = method.icon;
           const isExternal = method.href.startsWith('http');
@@ -72,54 +67,24 @@ const ContactSection = () => {
           return (
             <FadeIn key={method.label} delay={i * 0.1} y={30}>
               <a
-                href={method.href}
-                target={isExternal ? '_blank' : undefined}
-                rel={isExternal ? 'noopener noreferrer' : undefined}
-                className="group relative flex h-full min-h-[260px] flex-col justify-between gap-8 overflow-hidden rounded-2xl border border-[#D7E2EA]/20 bg-[#141418] p-6 shadow-[0_18px_55px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-300 hover:-translate-y-2 hover:border-[#D7E2EA]/55 hover:bg-[#191A20] hover:shadow-[0_28px_80px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-7 md:p-8"
+              href={method.href}
+              target={isExternal ? '_blank' : undefined}
+              rel={isExternal ? 'noopener noreferrer' : undefined}
+                aria-label={method.label}
+                title={method.label}
+                className="group relative grid h-20 w-20 place-items-center rounded-[1.35rem] border border-white/10 bg-[#18191E] shadow-[0_18px_38px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-16px_24px_rgba(0,0,0,0.28)] transition-all duration-300 hover:-translate-y-2 hover:rotate-[-2deg] hover:border-white/25 hover:bg-[#202126] hover:shadow-[0_28px_56px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.22)] sm:h-24 sm:w-24"
+                style={{ color: method.accent }}
               >
-                <div
-                  className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-70"
-                  style={{
-                    background: `linear-gradient(90deg, transparent, ${method.accent}, transparent)`,
-                  }}
+                <span
+                  className="pointer-events-none absolute inset-x-3 top-0 h-px opacity-75"
+                  style={{ background: `linear-gradient(90deg, transparent, ${method.accent}, transparent)` }}
                 />
-
-                <div className="relative flex items-start justify-between">
-                  <div
-                    className="relative grid h-16 w-16 place-items-center rounded-2xl border border-white/10 bg-[#202126] shadow-[0_16px_28px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-10px_20px_rgba(0,0,0,0.22)] transition-all duration-300 group-hover:-translate-y-1 group-hover:rotate-[-2deg] group-hover:scale-105"
-                    style={{ color: method.accent }}
-                  >
-                    <div className="absolute inset-1 rounded-[14px] border border-white/5 bg-white/[0.03]" />
-                    <Icon
-                      className="relative drop-shadow-[0_8px_10px_rgba(0,0,0,0.45)]"
-                      size={27}
-                      strokeWidth={1.8}
-                    />
-                  </div>
-
-                  <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.03] text-[#D7E2EA]/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-white/20 group-hover:text-[#D7E2EA]">
-                    <ArrowUpRight
-                      className="transition-transform duration-300 group-hover:rotate-12"
-                      size={20}
-                      strokeWidth={1.7}
-                    />
-                  </span>
-                </div>
-
-                <div className="relative flex flex-col gap-2 sm:gap-3">
-                  <span
-                    className="font-medium uppercase tracking-widest text-[#D7E2EA]/45"
-                    style={{ fontSize: 'clamp(0.7rem, 1.1vw, 0.9rem)' }}
-                  >
-                    {method.label}
-                  </span>
-                  <span
-                    className="break-words font-bold leading-snug text-[#D7E2EA]"
-                    style={{ fontSize: 'clamp(1rem, 1.8vw, 1.4rem)' }}
-                  >
-                    {method.value}
-                  </span>
-                </div>
+                <span className="absolute inset-2 rounded-[1rem] border border-white/[0.06] bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" />
+                <Icon
+                  className="relative drop-shadow-[0_10px_14px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-110"
+                  size={34}
+                  strokeWidth={1.75}
+                />
               </a>
             </FadeIn>
           );

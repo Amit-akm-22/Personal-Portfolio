@@ -48,11 +48,11 @@ const HeroSection = () => {
   useEffect(() => {
     let fired = false;
 
-    const goToServices = () => {
+    const goToAbout = () => {
       if (fired) return;
       fired = true;
-      const services = document.getElementById('services');
-      if (services) services.scrollIntoView({ behavior: 'auto', block: 'start' });
+      const about = document.getElementById('about');
+      if (about) about.scrollIntoView({ behavior: 'auto', block: 'start' });
     };
 
     const onWheel = (e: WheelEvent) => {
@@ -60,7 +60,7 @@ const HeroSection = () => {
       if (e.deltaY <= 0) return;
       if (window.scrollY > 50) return;
       e.preventDefault();
-      goToServices();
+      goToAbout();
     };
 
     const onKey = (e: KeyboardEvent) => {
@@ -68,7 +68,7 @@ const HeroSection = () => {
       if (window.scrollY > 50) return;
       if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
         e.preventDefault();
-        goToServices();
+        goToAbout();
       }
     };
 
@@ -173,7 +173,7 @@ const HeroSection = () => {
         <div className="flex items-end justify-between px-6 md:px-10 pb-7 sm:pb-10 md:pb-12">
           {/* Scroll indicator */}
           <FadeIn delay={1.1} y={20}>
-            <a href="#services" aria-label="Scroll to next section" className="group flex flex-col items-center gap-3">
+            <a href="#about" aria-label="Scroll to next section" className="group flex flex-col items-center gap-3">
               <span className="text-[9px] sm:text-[10px] font-medium uppercase tracking-[0.35em] text-white/70 transition group-hover:text-white">
                 Scroll
               </span>

@@ -16,10 +16,6 @@ const decorImages = [
     src: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/lego_icon-1.703bb594.png',
     className: 'right-[6%] top-[12%] w-20 md:w-32',
   },
-  {
-    src: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/Group_134-1.2e04f3ce.png',
-    className: 'bottom-[7%] right-[8%] w-24 md:w-40',
-  },
 ];
 
 const highlights = ['B.Tech CSE', 'MERN stack', 'DSA & OOP', 'Product-minded UI'];

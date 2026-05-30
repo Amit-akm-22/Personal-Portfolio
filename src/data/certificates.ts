@@ -1,3 +1,5 @@
+import certificatesData from '../../server/data/certificates.json';
+
 export interface CertificateData {
   id: string;
   number: string;
@@ -14,4 +16,4 @@ export interface CertificateData {
   accent: string;
 }
 
-export const CERTIFICATES: CertificateData[] = [];
+export const CERTIFICATES = certificatesData as CertificateData[];

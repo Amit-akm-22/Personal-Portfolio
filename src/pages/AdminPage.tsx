@@ -11,17 +11,19 @@ import {
   Image as ImageIcon,
   LayoutDashboard,
   Loader2,
+  LogOut,
   Pencil,
   Plus,
   RefreshCw,
   Save,
   Search,
+  Shield,
   Trash2,
   Trophy,
   Award,
   X,
 } from 'lucide-react';
-import { createContent, deleteContent, getPortfolioContent, reorderContent, updateContent } from '../lib/api';
+import { clearAdminToken, createContent, deleteContent, getAdminToken, getPortfolioContent, loginAdmin, reorderContent, updateContent } from '../lib/api';
 import { normalizeTechTags } from '../lib/tech';
 
 type ContentType = 'projects' | 'achievements' | 'certificates' | 'education';
@@ -94,6 +96,7 @@ const FileField = ({ label, name, multiple = false }: { label: string; name: str
 );
 
 const AdminPage = () => {
+  const [authenticated, setAuthenticated] = useState(() => Boolean(getAdminToken()));
   const [activeType, setActiveType] = useState<ContentType>('projects');
   const [content, setContent] = useState<Record<ContentType, AdminItem[]>>({
     projects: [],
@@ -107,6 +110,8 @@ const AdminPage = () => {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loginStatus, setLoginStatus] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const activeSection = sections.find((section) => section.type === activeType)!;
   const ActiveIcon = activeSection.icon;
@@ -132,8 +137,47 @@ const AdminPage = () => {
   };
 
   useEffect(() => {
-    loadContent();
-  }, []);
+    if (authenticated) {
+      loadContent();
+    } else {
+      setLoading(false);
+    }
+  }, [authenticated]);
+
+  const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoginLoading(true);
+    setLoginStatus('');
+
+    const formData = new FormData(event.currentTarget);
+    const username = String(formData.get('username') || '');
+    const password = String(formData.get('password') || '');
+
+    try {
+      await loginAdmin(username, password);
+      setAuthenticated(true);
+      setStatus('');
+    } catch {
+      setLoginStatus('Invalid username or password.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const logout = () => {
+    clearAdminToken();
+    setAuthenticated(false);
+    setContent({
+      projects: [],
+      achievements: [],
+      certificates: [],
+      education: [],
+    });
+    setQuery('');
+    setCreating(false);
+    setEditingItem(null);
+    setStatus('');
+  };
 
   const openNew = () => {
     setEditingItem(null);
@@ -227,6 +271,10 @@ const AdminPage = () => {
     }
   };
 
+  if (!authenticated) {
+    return <LoginScreen loading={loginLoading} status={loginStatus} onSubmit={submitLogin} />;
+  }
+
   return (
     <main className="min-h-screen bg-[#080914] text-white">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-white/[0.08] bg-[#0B0C16] md:flex md:flex-col">
@@ -319,6 +367,14 @@ const AdminPage = () => {
               >
                 <Plus size={20} />
               </button>
+              <button
+                onClick={logout}
+                className="grid h-10 w-10 place-items-center rounded-xl border border-red-400/20 bg-red-500/10 text-red-200 transition hover:bg-red-500/15"
+                aria-label="Log out"
+                title="Log out"
+              >
+                <LogOut size={17} />
+              </button>
             </div>
           </div>
 
@@ -396,6 +452,52 @@ const AdminPage = () => {
     </main>
   );
 };
+
+const LoginScreen = ({
+  loading,
+  status,
+  onSubmit,
+}: {
+  loading: boolean;
+  status: string;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) => (
+  <main className="grid min-h-screen place-items-center bg-[#080914] px-4 text-white">
+    <form
+      onSubmit={onSubmit}
+      className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#10111D] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.42)] sm:p-8"
+    >
+      <div className="mb-8 flex items-center gap-4">
+        <div className="grid h-12 w-12 place-items-center rounded-xl bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.35)]">
+          <Shield size={23} />
+        </div>
+        <div>
+          <h1 className="text-2xl font-black leading-none tracking-tight">Admin Login</h1>
+          <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-white/35">Portfolio access</p>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <Field label="Username" name="username" placeholder="admin" />
+        <Field label="Password" name="password" placeholder="Password" type="password" />
+      </div>
+
+      {status && (
+        <div className="mt-5 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+          {status}
+        </div>
+      )}
+
+      <button
+        disabled={loading}
+        className="mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-[0_14px_35px_rgba(37,99,235,0.3)] transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {loading ? <Loader2 className="animate-spin" size={16} /> : <Shield size={16} />}
+        Log in
+      </button>
+    </form>
+  </main>
+);
 
 const AdminCard = ({
   item,
@@ -588,6 +690,9 @@ const AchievementFields = ({ item }: { item?: AdminItem }) => (
     <Field label="Accent Color" name="accent" placeholder="#4ADE80" defaultValue={item?.accent} />
     <div className="md:col-span-2">
       <FileField label={item?.image ? 'Replace Image' : 'Image'} name="image" />
+    </div>
+    <div className="md:col-span-2">
+      <FileField label={item?.galleryImages?.length ? 'Replace Gallery Images' : 'Gallery Images'} name="galleryImages" multiple />
     </div>
     <div className="md:col-span-2">
       <TextArea label="Summary" name="summary" placeholder="Short card summary" defaultValue={item?.summary} />

@@ -9,12 +9,20 @@ const AchievementDetailsPage = () => {
   const [achievements, setAchievements] = useState<typeof ACHIEVEMENTS>([]);
   const [loading, setLoading] = useState(true);
   const achievement = achievements.find((item) => item.id === id);
+  const [activeImage, setActiveImage] = useState(0);
+  const galleryImages = achievement
+    ? Array.from(new Set([achievement.image, ...(achievement.galleryImages || [])].filter(Boolean)))
+    : [];
 
   useEffect(() => {
     getPortfolioContent()
       .then((content) => setAchievements(content.achievements))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setActiveImage(0);
+  }, [id]);
 
   if (!achievement && loading) {
     return <main className="flex min-h-screen items-center justify-center bg-[#0C0C0C] text-white">Loading...</main>;
@@ -33,6 +41,14 @@ const AchievementDetailsPage = () => {
     );
   }
 
+  const goToPreviousImage = () => {
+    setActiveImage((current) => (current === 0 ? galleryImages.length - 1 : current - 1));
+  };
+
+  const goToNextImage = () => {
+    setActiveImage((current) => (current === galleryImages.length - 1 ? 0 : current + 1));
+  };
+
   return (
     <main className="relative min-h-screen w-full overflow-hidden bg-[#0C0C0C] pb-32 text-white">
       <nav className="relative z-50 flex w-full items-center gap-8 px-6 py-8 md:px-10">
@@ -46,12 +62,12 @@ const AchievementDetailsPage = () => {
 
       <div className="mx-auto mt-10 max-w-7xl px-6 md:mt-16 md:px-10">
         <div className="flex flex-col gap-12 lg:flex-row lg:gap-20">
-          <div className="w-full lg:w-[55%]">
+          <div className="flex w-full flex-col gap-4 lg:w-[55%]">
             <FadeIn y={20}>
               <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-2xl border border-white/5 bg-black p-4 sm:p-6">
-                {achievement.image ? (
+                {galleryImages.length > 0 ? (
                   <img
-                    src={achievement.image}
+                    src={galleryImages[activeImage]}
                     alt={`${achievement.title} image`}
                     className="h-full w-full object-contain"
                   />
@@ -72,10 +88,48 @@ const AchievementDetailsPage = () => {
                 )}
 
                 <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/75 backdrop-blur">
-                  {achievement.number}
+                  {galleryImages.length > 1 ? `${activeImage + 1} / ${galleryImages.length}` : achievement.number}
                 </div>
+
+                {galleryImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={goToPreviousImage}
+                      className="absolute left-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/55 text-white transition hover:bg-white hover:text-black"
+                      aria-label="Previous achievement image"
+                    >
+                      &larr;
+                    </button>
+                    <button
+                      onClick={goToNextImage}
+                      className="absolute right-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/55 text-white transition hover:bg-white hover:text-black"
+                      aria-label="Next achievement image"
+                    >
+                      &rarr;
+                    </button>
+                  </>
+                )}
               </div>
             </FadeIn>
+
+            {galleryImages.length > 0 && (
+              <FadeIn delay={0.2} y={20}>
+                <div className="custom-scrollbar flex gap-4 overflow-x-auto pb-2">
+                  {galleryImages.map((img, index) => (
+                    <button
+                      key={`${img}-${index}`}
+                      onClick={() => setActiveImage(index)}
+                      className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border transition-all ${
+                        activeImage === index ? 'border-white' : 'border-white/10 hover:border-white/40'
+                      }`}
+                      aria-label={`Show achievement image ${index + 1}`}
+                    >
+                      <img src={img} alt={`${achievement.title} thumbnail ${index + 1}`} className="h-full w-full bg-black object-contain" />
+                    </button>
+                  ))}
+                </div>
+              </FadeIn>
+            )}
           </div>
 
           <div className="flex w-full flex-col justify-center lg:w-[45%]">
@@ -153,6 +207,22 @@ const AchievementDetailsPage = () => {
           </div>
         </div>
       </div>
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.4);
+        }
+      `}</style>
     </main>
   );
 };
