@@ -1,0 +1,133 @@
+[
+  {
+    "id": "personal-portfolio",
+    "number": "01",
+    "category": "Full Stack ",
+    "name": "Personal Portfolio",
+    "description": "A modern personal portfolio website showcasing projects, achievements, certificates, education, skills, and contact information with a dynamic admin panel for managing content.",
+    "impact": "Built a complete portfolio system with dynamic project, achievement, and certificate management. The admin panel allows adding, editing, deleting, reordering, and uploading images without changing code, making the portfolio easy to maintain and update.",
+    "liveUrl": "#",
+    "githubUrl": "#",
+    "tech": [
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Node.js",
+      "Express",
+      "JSON"
+    ],
+    "heroImage": "/uploads/1780143763961-Screenshot-2026-05-30-175024.png",
+    "galleryImages": [
+      "/uploads/1780143763961-Screenshot-2026-05-30-175024.png"
+    ],
+    "col1Image2": "/uploads/1780143763961-Screenshot-2026-05-30-175024.png",
+    "col2Image": "/uploads/1780143763961-Screenshot-2026-05-30-175024.png",
+    "accent": "#7EB8F7",
+    "year": "2026"
+  },
+  {
+    "id": "nbn-mits-desk",
+    "number": "02",
+    "category": "Full Stack",
+    "name": "Nbn  Mits Desk",
+    "description": "MITS NbN Desk is a paperless student request portal for NOC, Bonafide, No Dues, and approvals.",
+    "impact": "",
+    "liveUrl": "https://nbn.mitsgwalior.in/",
+    "githubUrl": "https://github.com/Amit-akm-22/MITS-One-Desk",
+    "tech": [
+      "React Node.js Express MongoDB"
+    ],
+    "heroImage": "/uploads/1779978448442-Screenshot-2026-05-22-190652.png",
+    "galleryImages": [
+      "/uploads/1779978448463-Screenshot-2026-05-22-191935.png"
+    ],
+    "col1Image2": "/uploads/1779978448442-Screenshot-2026-05-22-190652.png",
+    "col2Image": "/uploads/1779978448463-Screenshot-2026-05-22-191935.png",
+    "accent": "#7EB8F7",
+    "year": "2026"
+  },
+  {
+    "id": "divya-yatra-smart-pilgrimage-assistance-system",
+    "number": "03",
+    "category": "Full Stack ",
+    "name": " Divya Yatra – Smart Pilgrimage Assistance System",
+    "description": "Divya Yatra is an AI-powered smart pilgrimage management platform designed for Simhastha 2028. The system focuses on smart mobility, crowd intelligence, safety, and digital engagement for pilgrims.",
+    "impact": "Priority-based ticketing\r\nSmart navigation & alternate routing\r\nLive crowd monitoring (AI heatmaps)\r\nDynamic notice board\r\nLive darshan streaming\r\nSmart parking system\r\nAI lost & found\r\nTravel planner & chatbot\r\nAccessibility support for elderly & differently-abled",
+    "liveUrl": "https://www.divyayatra.xyz/",
+    "githubUrl": "https://github.com/Amit-akm-22/tic-SarthiX",
+    "tech": [
+      "React Node.js Express MongoDB"
+    ],
+    "heroImage": "/uploads/1779998981986-Screenshot-2026-05-29-013838.png",
+    "galleryImages": [
+      "/uploads/1779998981986-Screenshot-2026-05-29-013838.png"
+    ],
+    "col1Image2": "/uploads/1779998981986-Screenshot-2026-05-29-013838.png",
+    "col2Image": "/uploads/1779998981986-Screenshot-2026-05-29-013838.png",
+    "accent": "#7EB8F7",
+    "year": "2025"
+  },
+  {
+    "id": "travel-accommodation-platform",
+    "number": "04",
+    "category": "Full Stack ",
+    "name": "Travel Accommodation Platform",
+    "description": "WonderLust is a modern, high-end travel booking platform designed to connect travelers with unique stays and experiences. Built with the MERN Stack, it features a stunning Glassmorphism UI, Dynamic UPI Payments, and Interactive Maps.",
+    "impact": "Premium Glassmorphism Design: A visually striking interface with blur effects, smooth gradients, and elegant typography.\r\nFluid Animations: Powered by Framer Motion for seamless page transitions and interaction feedback.\r\nResponsive Layout: Fully optimized for Desktop, Tablet, and Mobile devices.",
+    "liveUrl": "https://wonder-lust-18.vercel.app/",
+    "githubUrl": "https://github.com/Amit-akm-22/WonderLust-18",
+    "tech": [
+      "React Node.js Express MongoDB"
+    ],
+    "heroImage": "/uploads/1779981202492-Screenshot-2026-05-28-204055.png",
+    "galleryImages": [
+      "/uploads/1779981202492-Screenshot-2026-05-28-204055.png"
+    ],
+    "col1Image2": "/uploads/1779981202492-Screenshot-2026-05-28-204055.png",
+    "col2Image": "/uploads/1779981202492-Screenshot-2026-05-28-204055.png",
+    "accent": "#7EB8F7",
+    "year": "2025"
+  },
+  {
+    "id": "eduvault-digital-document-locker",
+    "number": "05",
+    "category": "Full Stack ",
+    "name": "EduVault - Digital Document Locker",
+    "description": "EduVault is a secure MERN stack application allowing users to store and manage personal documents like certificates, resumes, and IDs",
+    "impact": "User Authentication: Secure Signup/Login with JWT.\r\nDocument Management: Upload, View, Delete, and Categorize documents.\r\nSecure Storage: Files are stored securely (Server-side storage implemented).\r\nResponsive UI: Modern, glassmorphism-inspired design.\r\nFiltering: Search and filter documents by category.",
+    "liveUrl": "https://academic-vault-two.vercel.app/login",
+    "githubUrl": "https://github.com/Amit-akm-22/Academic-Vault",
+    "tech": [
+      "React Node.js Express MongoDB"
+    ],
+    "heroImage": "/uploads/1779981794155-Screenshot-2026-05-28-205255.png",
+    "galleryImages": [
+      "/uploads/1779981794155-Screenshot-2026-05-28-205255.png"
+    ],
+    "col1Image2": "/uploads/1779981794155-Screenshot-2026-05-28-205255.png",
+    "col2Image": "/uploads/1779981794155-Screenshot-2026-05-28-205255.png",
+    "accent": "#7EB8F7",
+    "year": "2025"
+  },
+  {
+    "id": "run-time-qr-generator",
+    "number": "06",
+    "category": "HTML",
+    "name": "Run-Time QR Generator",
+    "description": "Create flawless, scannable UPI payment QR codes instantly directly in your browser. This application provides a beautifully crafted premium dark mode interface with offline capabilities — your data is never sent to any server.\r\n\r\n",
+    "impact": "Instant Generation: Generate codes by simply typing a UPI ID and (optional) payee name or amount.\r\nDeep-Link Ready: Creates a compliant upi://pay deep link that launches directly into any UPI app (GPay, PhonePe, Paytm).\r\nOne-Click Download: Instantly export a high-quality, perfectly squared PNG of your QR Code.\r\nUltra-Premium UI: Glassmorphic styling, ambient background glows, animated gradients, and 100% responsiveness.\r\nMicro-Interactions: Features a dedicated toast notification system, quick-copy to clipboard logic, and interactive hover states.",
+    "liveUrl": "run-time-qr-generator.vercel.app",
+    "githubUrl": "https://github.com/Amit-akm-22/Run-Time-QR-Generator",
+    "tech": [
+      "HTML CSS"
+    ],
+    "heroImage": "/uploads/1779998355393-Screenshot-2026-05-29-012836.png",
+    "galleryImages": [
+      "/uploads/1779998355393-Screenshot-2026-05-29-012836.png"
+    ],
+    "col1Image2": "/uploads/1779998355393-Screenshot-2026-05-29-012836.png",
+    "col2Image": "/uploads/1779998355393-Screenshot-2026-05-29-012836.png",
+    "accent": "#7EB8F7",
+    "year": "2026"
+  }
+]

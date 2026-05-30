@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  background: #0c0c0c;
+  font-family: 'Kanit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  color: #d7e2ea;
+  overflow-x: hidden;
+}
+
+.hero-heading {
+  background: linear-gradient(180deg, #646973 0%, #bbccd7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Subtle scrollbar that matches the dark theme */
+::-webkit-scrollbar {
+  width: 10px;
+  background: #0c0c0c;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f1f24;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a2a30;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.admin-field,
+.admin-field input,
+.admin-field textarea {
+  background: #0f111c !important;
+  color: #eef5ff !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 10px;
+}
+
+.admin-field::placeholder,
+.admin-field input::placeholder,
+.admin-field textarea::placeholder {
+  color: rgba(215, 226, 234, 0.28) !important;
+}
+
+.admin-field:focus,
+.admin-field input:focus,
+.admin-field textarea:focus {
+  border-color: rgba(59, 130, 246, 0.8) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.admin-file {
+  background: #0f111c !important;
+  color: #d7e2ea !important;
+  border: 1px dashed rgba(148, 163, 184, 0.28) !important;
+  border-radius: 10px;
+}
+
+.admin-file::file-selector-button {
+  margin-right: 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
