@@ -13,8 +13,8 @@ const NAV_LINKS = [
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [muted, setMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
   const [showSoundHint, setShowSoundHint] = useState(true);
 
   // Auto-hide "Tap for sound" hint after 5 seconds
@@ -23,22 +23,34 @@ const HeroSection = () => {
     return () => clearTimeout(t);
   }, []);
 
-  // Auto-mute video when scrolling past hero
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = true;
+    setMuted(true);
+    video.play().catch(() => {
+      setShowSoundHint(true);
+    });
+  }, []);
+
+  // Pause video when scrolling past hero, resume when hero is visible again.
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) {
-          const v = videoRef.current;
-          if (v && !v.muted) {
-            v.muted = true;
-            setMuted(true);
-          }
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (entry.isIntersecting) {
+          video.play().catch(() => undefined);
+        } else {
+          video.pause();
         }
       },
-      { threshold: 0, rootMargin: '-50% 0px 0px 0px' }
+      { threshold: 0.15 }
     );
     observer.observe(section);
     return () => observer.disconnect();
@@ -86,6 +98,10 @@ const HeroSection = () => {
     v.muted = !v.muted;
     setMuted(v.muted);
     setShowSoundHint(false);
+    const sectionBottom = sectionRef.current?.getBoundingClientRect().bottom ?? 0;
+    if (v.paused && sectionBottom > 0) {
+      v.play().catch(() => undefined);
+    }
   };
 
   return (
