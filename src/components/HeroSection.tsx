@@ -17,6 +17,7 @@ const HeroSection = () => {
   const [muted, setMuted] = useState(false);
   const [showSoundHint, setShowSoundHint] = useState(true);
   const [needsPlaybackConsent, setNeedsPlaybackConsent] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Auto-hide "Tap for sound" hint after 5 seconds
   useEffect(() => {
@@ -67,6 +68,29 @@ const HeroSection = () => {
     );
     observer.observe(section);
     return () => observer.disconnect();
+  }, []);
+
+  // Pause video when tab is hidden, resume when visible again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      if (document.hidden) {
+        video.pause();
+      } else {
+        // Resume play if the hero section is still somewhat visible
+        const sectionBottom = sectionRef.current?.getBoundingClientRect().bottom ?? 0;
+        if (sectionBottom > 0) {
+          playUnmuted();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Snap-scroll: one wheel tick / keypress while at top → jump to About
@@ -153,8 +177,22 @@ const HeroSection = () => {
       <div className="relative z-10 flex h-full flex-col">
         {/* Top bar */}
         <FadeIn delay={0} y={-20} className="relative">
-          <div className="flex items-center justify-between px-6 md:px-10 pt-6 md:pt-8">
-            <ul className="flex items-center gap-5 sm:gap-8 md:gap-12">
+          <div className="relative flex items-center justify-between px-6 pt-6 md:px-10 md:pt-8">
+            <button
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.22em] text-white backdrop-blur-md transition hover:bg-white/20 md:hidden"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-hero-menu"
+            >
+              <span className="flex h-3.5 w-4 flex-col justify-between" aria-hidden="true">
+                <span className="h-px w-full bg-current" />
+                <span className="h-px w-full bg-current" />
+                <span className="h-px w-full bg-current" />
+              </span>
+              Menu
+            </button>
+
+            <ul className="hidden items-center gap-12 md:flex">
               {NAV_LINKS.map((link) => (
                 <li key={link.label}>
                   {link.href.startsWith('#') ? (
@@ -178,10 +216,41 @@ const HeroSection = () => {
 
             <a
               href="#contact"
-              className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 sm:px-5 sm:py-2.5 text-[10px] sm:text-xs font-medium uppercase tracking-[0.2em] text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-[1.03]"
+              className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.2em] text-white backdrop-blur-md transition hover:scale-[1.03] hover:bg-white/20 sm:px-5 sm:py-2.5 sm:text-xs"
             >
               Email me
             </a>
+
+            {mobileMenuOpen && (
+              <div
+                id="mobile-hero-menu"
+                className="absolute left-6 right-6 top-[calc(100%+0.9rem)] z-30 overflow-hidden rounded-2xl border border-white/15 bg-black/40 shadow-[0_24px_70px_rgba(0,0,0,0.45)] md:hidden"
+              >
+                <div className="grid divide-y divide-white/10">
+                  {NAV_LINKS.map((link) =>
+                    link.href.startsWith('#') ? (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="px-5 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white/78 transition hover:bg-white/10 hover:text-white"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={link.label}
+                        to={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="px-5 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white/78 transition hover:bg-white/10 hover:text-white"
+                      >
+                        {link.label}
+                      </Link>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </FadeIn>
 

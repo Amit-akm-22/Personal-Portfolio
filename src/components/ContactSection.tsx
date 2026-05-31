@@ -24,7 +24,7 @@ const CONTACT_METHODS: ContactMethod[] = [
   {
     icon: Linkedin,
     label: 'LinkedIn',
-    href: 'https://www.linkedin.com/in/amit-manmode',
+    href: 'https://www.linkedin.com/in/amit-manmode-5b1a23328?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
     accent: '#60A5FA',
   },
   {
@@ -67,9 +67,9 @@ const ContactSection = () => {
           return (
             <FadeIn key={method.label} delay={i * 0.1} y={30}>
               <a
-              href={method.href}
-              target={isExternal ? '_blank' : undefined}
-              rel={isExternal ? 'noopener noreferrer' : undefined}
+                href={method.href}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
                 aria-label={method.label}
                 title={method.label}
                 className="group relative grid h-20 w-20 place-items-center rounded-[1.35rem] border border-white/10 bg-[#18191E] shadow-[0_18px_38px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-16px_24px_rgba(0,0,0,0.28)] transition-all duration-300 hover:-translate-y-2 hover:rotate-[-2deg] hover:border-white/25 hover:bg-[#202126] hover:shadow-[0_28px_56px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.22)] sm:h-24 sm:w-24"
