@@ -24,6 +24,7 @@ const files = {
   certificates: path.join(dataDir, 'certificates.json'),
   blogs: path.join(dataDir, 'blogs.json'),
   education: path.join(dataDir, 'education.json'),
+  sessions: path.join(dataDir, 'sessions.json'),
 };
 
 await fs.mkdir(dataDir, { recursive: true });
@@ -38,6 +39,24 @@ async function ensureJson(file) {
 }
 
 await Promise.all(Object.values(files).map(ensureJson));
+
+async function loadSessions() {
+  try {
+    const data = await fs.readFile(files.sessions, 'utf8');
+    const sessionsArray = JSON.parse(data);
+    if (Array.isArray(sessionsArray)) {
+      for (const t of sessionsArray) adminSessions.add(t);
+    }
+  } catch {
+    // Ignore error
+  }
+}
+
+async function saveSessions() {
+  await fs.writeFile(files.sessions, JSON.stringify([...adminSessions], null, 2), 'utf8');
+}
+
+await loadSessions();
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
@@ -242,7 +261,7 @@ const buildBlog = (body, file, existing = {}, count = 0) => {
   };
 };
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body || {};
 
   if (username !== adminUsername || password !== adminPassword) {
@@ -251,11 +270,13 @@ app.post('/api/auth/login', (req, res) => {
 
   const token = createToken();
   adminSessions.add(token);
+  await saveSessions();
   res.json({ token });
 });
 
-app.post('/api/auth/logout', requireAdmin, (req, res) => {
+app.post('/api/auth/logout', requireAdmin, async (req, res) => {
   adminSessions.delete(getBearerToken(req));
+  await saveSessions();
   res.json({ ok: true });
 });
 
