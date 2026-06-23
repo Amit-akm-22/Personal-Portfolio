@@ -33,6 +33,13 @@ export const clearAdminToken = () => {
   window.localStorage.removeItem(ADMIN_TOKEN_KEY);
 };
 
+export class AuthError extends Error {
+  constructor(message = 'Unauthorized') {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
 const authHeaders = (): Record<string, string> => {
   const token = getAdminToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -82,6 +89,10 @@ export async function createContent(type: 'projects' | 'achievements' | 'certifi
     body: formData,
   });
 
+  if (response.status === 401) {
+    throw new AuthError();
+  }
+
   if (!response.ok) {
     throw new Error(`Could not create ${type}`);
   }
@@ -96,6 +107,10 @@ export async function updateContent(type: 'projects' | 'achievements' | 'certifi
     body: formData,
   });
 
+  if (response.status === 401) {
+    throw new AuthError();
+  }
+
   if (!response.ok) {
     throw new Error(`Could not update ${type}`);
   }
@@ -108,6 +123,10 @@ export async function deleteContent(type: 'projects' | 'achievements' | 'certifi
     method: 'DELETE',
     headers: authHeaders(),
   });
+
+  if (response.status === 401) {
+    throw new AuthError();
+  }
 
   if (!response.ok) {
     throw new Error(`Could not delete ${type}`);
@@ -125,6 +144,10 @@ export async function reorderContent(type: 'projects' | 'achievements' | 'certif
     },
     body: JSON.stringify({ ids }),
   });
+
+  if (response.status === 401) {
+    throw new AuthError();
+  }
 
   if (!response.ok) {
     throw new Error(`Could not reorder ${type}`);

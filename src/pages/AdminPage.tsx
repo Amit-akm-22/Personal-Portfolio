@@ -23,7 +23,7 @@ import {
   Award,
   X,
 } from 'lucide-react';
-import { clearAdminToken, createContent, deleteContent, getAdminToken, getPortfolioContent, loginAdmin, reorderContent, updateContent } from '../lib/api';
+import { AuthError, clearAdminToken, createContent, deleteContent, getAdminToken, getPortfolioContent, loginAdmin, reorderContent, updateContent } from '../lib/api';
 import { normalizeTechTags } from '../lib/tech';
 
 type ContentType = 'projects' | 'achievements' | 'certificates' | 'education';
@@ -214,8 +214,13 @@ const AdminPage = () => {
 
       await loadContent();
       closeEditor();
-    } catch {
-      setStatus('Could not save. Make sure the backend is running on port 4000.');
+    } catch (error) {
+      if (error instanceof AuthError || (error as Error)?.name === 'AuthError') {
+        logout();
+        setStatus('Session expired. Please log in again.');
+      } else {
+        setStatus('Could not save. Make sure the backend is running on port 4000.');
+      }
       setSaving(false);
     }
   };
@@ -229,8 +234,13 @@ const AdminPage = () => {
       await deleteContent(activeType, item.id);
       await loadContent();
       setStatus(`${activeSection.single} deleted successfully.`);
-    } catch {
-      setStatus('Could not delete. Make sure the backend is running on port 4000.');
+    } catch (error) {
+      if (error instanceof AuthError || (error as Error)?.name === 'AuthError') {
+        logout();
+        setStatus('Session expired. Please log in again.');
+      } else {
+        setStatus('Could not delete. Make sure the backend is running on port 4000.');
+      }
     }
   };
 
@@ -262,12 +272,17 @@ const AdminPage = () => {
         [activeType]: savedItems,
       }));
       setStatus(`${activeSection.label} order updated successfully.`);
-    } catch {
+    } catch (error) {
       setContent((current) => ({
         ...current,
         [activeType]: currentItems,
       }));
-      setStatus('Could not reorder. Make sure the backend is running on port 4000.');
+      if (error instanceof AuthError || (error as Error)?.name === 'AuthError') {
+        logout();
+        setStatus('Session expired. Please log in again.');
+      } else {
+        setStatus('Could not reorder. Make sure the backend is running on port 4000.');
+      }
     }
   };
 
