@@ -106,6 +106,7 @@ const AdminPage = () => {
     achievements: [],
     certificates: [],
     education: [],
+    profile: [],
   });
   const [query, setQuery] = useState('');
   const [editingItem, setEditingItem] = useState<AdminItem | null>(null);
@@ -135,6 +136,7 @@ const AdminPage = () => {
       achievements: nextContent.achievements,
       certificates: nextContent.certificates,
       education: nextContent.education,
+      profile: [],
     });
     setProfile(nextContent.profile);
     setLoading(false);
@@ -176,6 +178,7 @@ const AdminPage = () => {
       achievements: [],
       certificates: [],
       education: [],
+      profile: [],
     });
     setQuery('');
     setCreating(false);
@@ -209,10 +212,10 @@ const AdminPage = () => {
     try {
       const formData = new FormData(event.currentTarget);
       if (editingItem) {
-        await updateContent(activeType, editingItem.id, formData);
+        await updateContent(activeType as Exclude<ContentType, 'profile'>, editingItem.id, formData);
         setStatus(`${activeSection.single} updated successfully.`);
       } else {
-        await createContent(activeType, formData);
+        await createContent(activeType as Exclude<ContentType, 'profile'>, formData);
         setStatus(`${activeSection.single} created successfully.`);
       }
 
@@ -235,7 +238,7 @@ const AdminPage = () => {
 
     setStatus('Deleting content...');
     try {
-      await deleteContent(activeType, item.id);
+      await deleteContent(activeType as Exclude<ContentType, 'profile'>, item.id);
       await loadContent();
       setStatus(`${activeSection.single} deleted successfully.`);
     } catch (error) {
@@ -270,7 +273,7 @@ const AdminPage = () => {
     setStatus('Saving new display order...');
 
     try {
-      const savedItems = await reorderContent(activeType, renumberedItems.map((currentItem) => currentItem.id));
+      const savedItems = await reorderContent(activeType as Exclude<ContentType, 'profile'>, renumberedItems.map((currentItem) => currentItem.id));
       setContent((current) => ({
         ...current,
         [activeType]: savedItems,
