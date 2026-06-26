@@ -1,176 +1,112 @@
-import { useEffect, useState, FormEvent } from 'react';
-import { Mail, Phone, Send, Loader2 } from 'lucide-react';
+import { Mail, MessageCircle, Linkedin, Github } from 'lucide-react';
 import FadeIn from './FadeIn';
-import { getPortfolioContent, ProfileData } from '../lib/api';
+
+interface ContactMethod {
+  icon: typeof Mail;
+  label: string;
+  href: string;
+  accent: string;
+}
+
+const CONTACT_METHODS: ContactMethod[] = [
+  {
+    icon: Mail,
+    label: 'Email',
+    href: 'mailto:amit.akm.work@gmail.com',
+    accent: '#7EB8F7',
+  },
+  {
+    icon: MessageCircle,
+    label: 'WhatsApp',
+    href: 'https://wa.me/6264677098',
+    accent: '#4ADE80',
+  },
+  {
+    icon: Linkedin,
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/amit-manmode-5b1a23328?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
+    accent: '#60A5FA',
+  },
+  {
+    icon: Github,
+    label: 'GitHub',
+    href: 'https://github.com/Amit-akm-22',
+    accent: '#D7E2EA',
+  },
+];
 
 const ContactSection = () => {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [sending, setSending] = useState(false);
-  const [status, setStatus] = useState('');
-
-  useEffect(() => {
-    getPortfolioContent().then((content) => setProfile(content.profile));
-  }, []);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSending(true);
-    setStatus('');
-    
-    // Fallback: If you don't have a backend mailer, open mailto link
-    // We will just simulate a sending state then open mail client
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name');
-    const message = formData.get('message');
-    
-    setTimeout(() => {
-      setSending(false);
-      setStatus('Opening mail client...');
-      window.location.href = `mailto:${profile?.email || 'amit.akm.work@gmail.com'}?subject=Portfolio Contact from ${name}&body=${message}`;
-      
-      setTimeout(() => setStatus(''), 3000);
-    }, 800);
-  };
-
   return (
-    <section id="contact" className="relative w-full bg-[#0C0C0C] px-5 sm:px-8 md:px-10 pt-16 sm:pt-20 md:pt-24 pb-16">
-      <div className="mx-auto max-w-[1200px]">
-        
-        {/* Header Area */}
-        <div className="mb-16 md:mb-24">
-          <FadeIn y={20}>
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-blue-500 mb-4">
-              Get in touch
-            </p>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] font-black tracking-tight text-white leading-[1.1] mb-6 max-w-3xl">
-              Let's Build Something<br className="hidden sm:block" /> Extraordinary
-            </h2>
-            <p className="text-sm sm:text-base text-white/50 leading-relaxed max-w-2xl font-medium">
-              I'm always excited to hear about new challenges and creative ideas. Whether you have a specific
-              project in mind or just want to explore a shared vision, feel free to drop me a message.
-            </p>
-          </FadeIn>
-        </div>
+    <section
+      id="contact"
+      className="relative w-full bg-[#0C0C0C] px-5 sm:px-8 md:px-10 pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20"
+    >
+      <FadeIn y={40}>
+        <h2
+          className="hero-heading text-center font-black uppercase tracking-tight leading-none mb-4"
+          style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
+        >
+          Get in touch
+        </h2>
+      </FadeIn>
 
-        <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-start">
-          
-          {/* Left Side: Contact Channels */}
-          <div className="lg:col-span-5 flex flex-col gap-8 lg:gap-12">
-            <FadeIn delay={0.1} y={20}>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-1.5 h-8 bg-blue-600 rounded-full" />
-                <h3 className="text-lg font-black uppercase tracking-widest text-white">
-                  Contact Channels
-                </h3>
-              </div>
+      <FadeIn delay={0.15} y={20}>
+        <p
+          className="text-center font-light uppercase tracking-widest text-[#D7E2EA]/60 mb-12 sm:mb-16 md:mb-20"
+          style={{ fontSize: 'clamp(0.85rem, 1.4vw, 1.1rem)' }}
+        >
+          Pick whichever channel suits you
+        </p>
+      </FadeIn>
 
-              <div className="flex flex-col gap-6">
-                {/* Email */}
-                <div className="flex items-center gap-6 group cursor-pointer" onClick={() => window.location.href = `mailto:${profile?.email}`}>
-                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-white/[0.06] bg-[#14151A] text-white/60 transition-all duration-300 group-hover:bg-[#1A1C23] group-hover:text-blue-400 group-hover:border-blue-500/30">
-                    <Mail size={24} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-1">Email Address</p>
-                    <p className="text-base sm:text-lg font-bold text-white tracking-wide transition-colors group-hover:text-blue-100">
-                      {profile?.email || 'Loading...'}
-                    </p>
-                  </div>
-                </div>
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-5 sm:gap-7">
+        {CONTACT_METHODS.map((method, i) => {
+          const Icon = method.icon;
+          const isExternal = method.href.startsWith('http');
 
-                {/* Phone */}
-                <div className="flex items-center gap-6 group cursor-pointer" onClick={() => window.location.href = `tel:${profile?.phone}`}>
-                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-white/[0.06] bg-[#14151A] text-white/60 transition-all duration-300 group-hover:bg-[#1A1C23] group-hover:text-blue-400 group-hover:border-blue-500/30">
-                    <Phone size={24} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-1">Phone Number</p>
-                    <p className="text-base sm:text-lg font-bold text-white tracking-wide transition-colors group-hover:text-blue-100">
-                      {profile?.phone || 'Loading...'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+          return (
+            <FadeIn key={method.label} delay={i * 0.1} y={30}>
+              <a
+                href={method.href}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                aria-label={method.label}
+                title={method.label}
+                className="group relative grid h-20 w-20 place-items-center rounded-[1.35rem] border border-white/10 bg-[#18191E] shadow-[0_18px_38px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-16px_24px_rgba(0,0,0,0.28)] transition-all duration-300 hover:-translate-y-2 hover:rotate-[-2deg] hover:border-white/25 hover:bg-[#202126] hover:shadow-[0_28px_56px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.22)] sm:h-24 sm:w-24"
+                style={{ color: method.accent }}
+              >
+                <span
+                  className="pointer-events-none absolute inset-x-3 top-0 h-px opacity-75"
+                  style={{ background: `linear-gradient(90deg, transparent, ${method.accent}, transparent)` }}
+                />
+                <span className="absolute inset-2 rounded-[1rem] border border-white/[0.06] bg-white/[0.025] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" />
+                <Icon
+                  className="relative drop-shadow-[0_10px_14px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-110"
+                  size={34}
+                  strokeWidth={1.75}
+                />
+              </a>
             </FadeIn>
-          </div>
-
-          {/* Right Side: Contact Form */}
-          <div className="lg:col-span-7">
-            <FadeIn delay={0.2} y={30}>
-              <form onSubmit={handleSubmit} className="rounded-[2rem] border border-white/[0.04] bg-[#121318] p-6 sm:p-8 md:p-10 shadow-[0_24px_58px_rgba(0,0,0,0.5)]">
-                <div className="flex flex-col gap-6">
-                  
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Your Name</span>
-                    <input 
-                      required
-                      name="name"
-                      type="text" 
-                      placeholder="Full Name" 
-                      className="w-full rounded-xl border border-white/[0.06] bg-[#18191E] px-5 py-4 text-sm font-medium text-white placeholder:text-white/20 outline-none transition focus:border-blue-500/50 focus:bg-[#1A1C23]"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Your Email</span>
-                    <input 
-                      required
-                      name="email"
-                      type="email" 
-                      placeholder="email@address.com" 
-                      className="w-full rounded-xl border border-white/[0.06] bg-[#18191E] px-5 py-4 text-sm font-medium text-white placeholder:text-white/20 outline-none transition focus:border-blue-500/50 focus:bg-[#1A1C23]"
-                    />
-                  </label>
-
-                  <label className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Your Message</span>
-                    <textarea 
-                      required
-                      name="message"
-                      rows={4}
-                      placeholder="How can I help you?" 
-                      className="w-full resize-y rounded-xl border border-white/[0.06] bg-[#18191E] px-5 py-4 text-sm font-medium leading-relaxed text-white placeholder:text-white/20 outline-none transition focus:border-blue-500/50 focus:bg-[#1A1C23]"
-                    />
-                  </label>
-
-                  <div className="pt-2">
-                    <button 
-                      type="submit"
-                      disabled={sending}
-                      className="group flex w-full items-center justify-center gap-3 rounded-xl bg-white px-6 py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-gray-100 disabled:opacity-70"
-                    >
-                      {sending ? (
-                        <>
-                          <Loader2 className="animate-spin" size={18} /> Sending...
-                        </>
-                      ) : status ? (
-                        status
-                      ) : (
-                        <>
-                          Send Message
-                          <Send size={16} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </FadeIn>
-          </div>
-        </div>
-
-        {/* Footer info */}
-        <FadeIn delay={0.4} y={20}>
-          <div className="mx-auto mt-20 sm:mt-24 md:mt-32 flex flex-col items-center gap-3 border-t border-white/[0.05] pt-8 text-center sm:flex-row sm:justify-between">
-            <span className="font-bold uppercase tracking-widest text-white/30 text-[10px]">
-              © {new Date().getFullYear()} Amit Manmode
-            </span>
-            <span className="font-bold uppercase tracking-widest text-white/30 text-[10px]">
-              Designed & built in Pandhurna
-            </span>
-          </div>
-        </FadeIn>
+          );
+        })}
       </div>
+
+      <FadeIn delay={0.4} y={20}>
+        <div className="mx-auto mt-20 flex max-w-5xl flex-col items-center gap-3 border-t border-[#D7E2EA]/10 pt-8 text-center sm:mt-24 sm:flex-row sm:justify-between md:mt-28">
+          <span
+            className="font-light uppercase tracking-widest text-[#D7E2EA]/50"
+            style={{ fontSize: 'clamp(0.7rem, 1.1vw, 0.9rem)' }}
+          >
+            © 2026 Amit Manmode
+          </span>
+          <span
+            className="font-light uppercase tracking-widest text-[#D7E2EA]/50"
+            style={{ fontSize: 'clamp(0.7rem, 1.1vw, 0.9rem)' }}
+          >
+            Designed & built in Pandhurna
+          </span>
+        </div>
+      </FadeIn>
     </section>
   );
 };
