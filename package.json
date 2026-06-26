@@ -12,11 +12,14 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.344.0",
     "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.15.1"
