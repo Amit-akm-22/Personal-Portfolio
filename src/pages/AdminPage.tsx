@@ -429,7 +429,7 @@ const AdminPage = () => {
           )}
 
           {activeType === 'profile' ? (
-            <ProfileForm profile={profile} onSaved={loadContent} />
+            <ProfileForm profile={profile} onSaved={loadContent} onAuthError={() => { clearAdminToken(); setAuthenticated(false); }} />
           ) : loading ? (
             <div className="grid min-h-[420px] place-items-center rounded-3xl border border-white/[0.08] bg-white/[0.02] text-white/50">
               <span className="flex items-center gap-3">
@@ -765,7 +765,7 @@ const EducationFields = ({ item }: { item?: AdminItem }) => (
   </div>
 );
 
-const ProfileForm = ({ profile, onSaved }: { profile: any; onSaved: () => void }) => {
+const ProfileForm = ({ profile, onSaved, onAuthError }: { profile: any; onSaved: () => void; onAuthError: () => void }) => {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
 
@@ -779,7 +779,11 @@ const ProfileForm = ({ profile, onSaved }: { profile: any; onSaved: () => void }
       setStatus('Profile updated successfully!');
       onSaved();
     } catch (err: any) {
-      setStatus('Error: ' + err.message);
+      if (err instanceof AuthError || err.message === 'Unauthorized') {
+        onAuthError();
+      } else {
+        setStatus('Error: ' + err.message);
+      }
     } finally {
       setSaving(false);
     }
