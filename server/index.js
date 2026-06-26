@@ -38,7 +38,6 @@ const app = express();
 const port = process.env.PORT || 4000;
 const adminUsername = process.env.ADMIN_USERNAME || 'admin';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-const adminSessions = new Set();
 
 // ─── Data Files ───────────────────────────────────────────────────────────────
 const dataFiles = {
@@ -47,7 +46,6 @@ const dataFiles = {
   certificates: path.join(dataDir, 'certificates.json'),
   blogs: path.join(dataDir, 'blogs.json'),
   education: path.join(dataDir, 'education.json'),
-  sessions: path.join(dataDir, 'sessions.json'),
   profile: path.join(dataDir, 'profile.json'),
 };
 
@@ -63,14 +61,8 @@ async function ensureJson(file) {
 
 await Promise.all(Object.values(dataFiles).map(ensureJson));
 
-// ─── Session Persistence ──────────────────────────────────────────────────────
-async function loadSessions() {
-  try {
-    const data = await fs.readFile(dataFiles.sessions, 'utf8');
-    const saved = JSON.parse(data);
-    saved.forEach((token) => adminSessions.add(token));
-  } catch {}
-
+// ─── Profile Init ──────────────────────────────────────────────────────
+async function loadProfile() {
   try {
     await fs.access(dataFiles.profile);
   } catch {
@@ -89,15 +81,7 @@ async function loadSessions() {
   }
 }
 
-async function saveSessions() {
-  await fs.writeFile(
-    dataFiles.sessions,
-    JSON.stringify([...adminSessions], null, 2),
-    'utf8'
-  );
-}
-
-await loadSessions();
+await loadProfile();
 
 // ─── Cloudinary Multer Storage ────────────────────────────────────────────────
 // Images go to Cloudinary → portfolio_uploads folder
@@ -132,7 +116,7 @@ app.use(
 app.use(express.json());
 
 // ─── Auth Helpers ─────────────────────────────────────────────────────────────
-const createToken = () => crypto.randomBytes(32).toString('hex');
+const createToken = () => crypto.createHash('sha256').update(adminPassword).digest('hex');
 const getBearerToken = (req) => {
   const authHeader = req.get('authorization') || '';
   const [scheme, token] = authHeader.split(' ');
@@ -141,7 +125,7 @@ const getBearerToken = (req) => {
 
 const requireAdmin = (req, res, next) => {
   const token = getBearerToken(req);
-  if (!token || !adminSessions.has(token)) {
+  if (!token || token !== createToken()) {
     return res.status(401).json({ message: 'Admin authentication required' });
   }
   return next();
@@ -355,15 +339,10 @@ app.post('/api/auth/login', async (req, res) => {
   if (username !== adminUsername || password !== adminPassword) {
     return res.status(401).json({ message: 'Invalid username or password' });
   }
-  const token = createToken();
-  adminSessions.add(token);
-  await saveSessions();
-  res.json({ token });
+  res.json({ token: createToken() });
 });
 
 app.post('/api/auth/logout', requireAdmin, async (req, res) => {
-  adminSessions.delete(getBearerToken(req));
-  await saveSessions();
   res.json({ ok: true });
 });
 
