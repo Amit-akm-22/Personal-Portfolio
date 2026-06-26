@@ -2,17 +2,10 @@ import 'dotenv/config';
 import cors from 'cors';
 import crypto from 'crypto';
 import express from 'express';
-import fs from 'fs/promises';
 import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-
-// ─── Paths ────────────────────────────────────────────────────────────────────
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dataDir = path.join(__dirname, 'data');
 
 // ─── Cloudinary Config ────────────────────────────────────────────────────────
 cloudinary.config({
@@ -21,17 +14,42 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Validate Cloudinary config at startup
 const cloudinaryConfigured =
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_API_KEY &&
   process.env.CLOUDINARY_API_SECRET;
 
 if (!cloudinaryConfigured) {
-  console.warn(
-    '⚠️  Cloudinary env vars not set. Image uploads will not work.'
-  );
+  console.warn('⚠️  Cloudinary env vars not set. Image uploads will not work.');
 }
+
+// ─── MongoDB Connection ───────────────────────────────────────────────────────
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI environment variable is not set!');
+  process.exit(1);
+}
+
+await mongoose.connect(MONGODB_URI, { dbName: 'portfolio' });
+console.log('✅ Connected to MongoDB Atlas');
+
+// ─── MongoDB Schemas ──────────────────────────────────────────────────────────
+const itemSchema = new mongoose.Schema({}, { strict: false, timestamps: true });
+
+const Project     = mongoose.model('Project',     itemSchema, 'projects');
+const Achievement = mongoose.model('Achievement', itemSchema, 'achievements');
+const Certificate = mongoose.model('Certificate', itemSchema, 'certificates');
+const Blog        = mongoose.model('Blog',        itemSchema, 'blogs');
+const Education   = mongoose.model('Education',   itemSchema, 'educations');
+const Profile     = mongoose.model('Profile',     itemSchema, 'profile');
+
+const COLLECTION_MAP = {
+  projects:     Project,
+  achievements: Achievement,
+  certificates: Certificate,
+  blogs:        Blog,
+  education:    Education,
+};
 
 // ─── Express Setup ────────────────────────────────────────────────────────────
 const app = express();
@@ -39,57 +57,12 @@ const port = process.env.PORT || 4000;
 const adminUsername = process.env.ADMIN_USERNAME || 'admin';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
-// ─── Data Files ───────────────────────────────────────────────────────────────
-const dataFiles = {
-  projects: path.join(dataDir, 'projects.json'),
-  achievements: path.join(dataDir, 'achievements.json'),
-  certificates: path.join(dataDir, 'certificates.json'),
-  blogs: path.join(dataDir, 'blogs.json'),
-  education: path.join(dataDir, 'education.json'),
-  profile: path.join(dataDir, 'profile.json'),
-};
-
-await fs.mkdir(dataDir, { recursive: true });
-
-async function ensureJson(file) {
-  try {
-    await fs.access(file);
-  } catch {
-    await fs.writeFile(file, '[]', 'utf8');
-  }
-}
-
-await Promise.all(Object.values(dataFiles).map(ensureJson));
-
-// ─── Profile Init ──────────────────────────────────────────────────────
-async function loadProfile() {
-  try {
-    await fs.access(dataFiles.profile);
-  } catch {
-    await fs.writeFile(
-      dataFiles.profile,
-      JSON.stringify({
-        githubUrl: 'https://github.com/Amit-akm-22',
-        githubImage: '',
-        linkedinUrl: 'https://www.linkedin.com/in/amit-manmode-5b1a23328',
-        linkedinImage: '',
-        email: 'amit.akm.work@gmail.com',
-        phone: '+91 83057-21431'
-      }, null, 2),
-      'utf8'
-    );
-  }
-}
-
-await loadProfile();
-
 // ─── Cloudinary Multer Storage ────────────────────────────────────────────────
-// Images go to Cloudinary → portfolio_uploads folder
 const cloudinaryStorage = new CloudinaryStorage({
   cloudinary,
   params: async (_req, file) => {
     if (!cloudinaryConfigured) {
-      throw new Error('Cloudinary environment variables are missing on Render. Please add them in the Render Dashboard.');
+      throw new Error('Cloudinary env vars missing on Render.');
     }
     return {
       folder: 'portfolio_uploads',
@@ -110,13 +83,17 @@ app.use(
       'http://localhost:5173',
       'https://amitmanmode.me',
       'https://www.amitmanmode.me',
+      /\.onrender\.com$/,
+      /\.vercel\.app$/,
     ],
   })
 );
 app.use(express.json());
 
 // ─── Auth Helpers ─────────────────────────────────────────────────────────────
-const createToken = () => crypto.createHash('sha256').update(adminPassword).digest('hex');
+const createToken = () =>
+  crypto.createHash('sha256').update(adminPassword).digest('hex');
+
 const getBearerToken = (req) => {
   const authHeader = req.get('authorization') || '';
   const [scheme, token] = authHeader.split(' ');
@@ -132,21 +109,44 @@ const requireAdmin = (req, res, next) => {
 };
 
 // ─── DB Helpers ───────────────────────────────────────────────────────────────
-const readItems = async (type) =>
-  JSON.parse(await fs.readFile(dataFiles[type], 'utf8'));
+const readItems = async (type) => {
+  const Model = COLLECTION_MAP[type];
+  const docs = await Model.find({}).sort({ number: 1 }).lean();
+  return docs.map(({ _id, __v, createdAt, updatedAt, ...rest }) => rest);
+};
 
-const writeItems = async (type, items) =>
-  fs.writeFile(dataFiles[type], JSON.stringify(items, null, 2), 'utf8');
+const writeItems = async (type, items) => {
+  const Model = COLLECTION_MAP[type];
+  await Model.deleteMany({});
+  if (items.length) await Model.insertMany(items);
+};
 
-const readProfile = async () =>
-  JSON.parse(await fs.readFile(dataFiles.profile, 'utf8'));
+const readProfile = async () => {
+  const doc = await Profile.findOne({}).lean();
+  if (!doc) {
+    const defaults = {
+      githubUrl: 'https://github.com/Amit-akm-22',
+      githubImage: '',
+      linkedinUrl: 'https://www.linkedin.com/in/amit-manmode-5b1a23328',
+      linkedinImage: '',
+      email: 'amit.akm.work@gmail.com',
+      phone: '+91 83057-21431',
+    };
+    await Profile.create(defaults);
+    return defaults;
+  }
+  const { _id, __v, createdAt, updatedAt, ...rest } = doc;
+  return rest;
+};
 
-const writeProfile = async (profile) =>
-  fs.writeFile(dataFiles.profile, JSON.stringify(profile, null, 2), 'utf8');
+const writeProfile = async (profile) => {
+  await Profile.deleteMany({});
+  await Profile.create(profile);
+};
 
 // ─── String Utilities ─────────────────────────────────────────────────────────
 const slugify = (value) =>
-  value
+  String(value)
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
@@ -178,8 +178,7 @@ const splitTechList = (value) => {
   return items;
 };
 
-// ─── Cloudinary URL helper ────────────────────────────────────────────────────
-// multer-storage-cloudinary stores the Cloudinary URL in file.path
+// ─── Cloudinary URL helpers ────────────────────────────────────────────────────
 const uploadUrl = (file) => (file ? file.path : '');
 const uploadedUrls = (fileList = []) => fileList.map(uploadUrl).filter(Boolean);
 
@@ -218,8 +217,7 @@ const buildProject = (body, files = {}, existing = {}, count = 0) => {
     col1Image2: nextGallery[1] || nextHero || '',
     col2Image: nextGallery[2] || nextGallery[0] || nextHero || '',
     accent: body.accent || existing.accent || '#7EB8F7',
-    year:
-      body.year || existing.year || new Date().getFullYear().toString(),
+    year: body.year || existing.year || new Date().getFullYear().toString(),
   };
 };
 
@@ -239,8 +237,7 @@ const buildAchievement = (body, files = {}, existing = {}, count = 0) => {
     number: existing.number || String(count + 1).padStart(2, '0'),
     title,
     issuer: body.issuer || existing.issuer || '',
-    date:
-      body.date || existing.date || new Date().getFullYear().toString(),
+    date: body.date || existing.date || new Date().getFullYear().toString(),
     category: body.category || existing.category || 'Achievement',
     summary: body.summary || existing.summary || '',
     details: body.details || existing.details || '',
@@ -265,8 +262,7 @@ const buildCertificate = (body, file, existing = {}, count = 0) => {
     number: existing.number || String(count + 1).padStart(2, '0'),
     title,
     issuer: body.issuer || existing.issuer || '',
-    date:
-      body.date || existing.date || new Date().getFullYear().toString(),
+    date: body.date || existing.date || new Date().getFullYear().toString(),
     category: body.category || existing.category || 'Certificate',
     summary: body.summary || existing.summary || '',
     details: body.details || existing.details || '',
@@ -291,8 +287,7 @@ const buildEducation = (body, file, existing = {}, count = 0) => {
     college,
     degree: body.degree || existing.degree || '',
     branch: body.branch || existing.branch || '',
-    year:
-      body.year || existing.year || new Date().getFullYear().toString(),
+    year: body.year || existing.year || new Date().getFullYear().toString(),
     score: body.score || existing.score || '',
     logo: uploadUrl(file) || existing.logo || '',
     accent: body.accent || existing.accent || '#F59E0B',
@@ -319,16 +314,13 @@ const buildBlog = (body, file, existing = {}, count = 0) => {
     number: existing.number || String(count + 1).padStart(2, '0'),
     title,
     category: body.category || existing.category || 'Blog',
-    date:
-      body.date || existing.date || new Date().getFullYear().toString(),
+    date: body.date || existing.date || new Date().getFullYear().toString(),
     readTime: body.readTime || existing.readTime || '3 min read',
     excerpt: body.excerpt || existing.excerpt || '',
     intro: body.intro || existing.intro || '',
     coverImage: uploadUrl(file) || existing.coverImage || '',
     sections,
-    tags: splitList(body.tags).length
-      ? splitList(body.tags)
-      : existing.tags || [],
+    tags: splitList(body.tags).length ? splitList(body.tags) : existing.tags || [],
     accent: body.accent || existing.accent || '#A78BFA',
   };
 };
@@ -342,7 +334,7 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ token: createToken() });
 });
 
-app.post('/api/auth/logout', requireAdmin, async (req, res) => {
+app.post('/api/auth/logout', requireAdmin, (_req, res) => {
   res.json({ ok: true });
 });
 
@@ -360,14 +352,29 @@ app.get('/api/content', async (_req, res) => {
       ]);
     res.json({ projects, achievements, certificates, blogs, education, profile });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to load content' });
+  }
+});
+
+app.get('/api/profile', async (_req, res) => {
+  try {
+    res.json(await readProfile());
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to read profile' });
   }
 });
 
 app.get('/api/:type', async (req, res) => {
   const { type } = req.params;
-  if (!dataFiles[type]) return res.status(404).json({ message: 'Unknown content type' });
-  res.json(await readItems(type));
+  if (!COLLECTION_MAP[type]) return res.status(404).json({ message: 'Unknown content type' });
+  try {
+    res.json(await readItems(type));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to read content' });
+  }
 });
 
 // ─── Auth Guard for mutating routes ──────────────────────────────────────────
@@ -376,16 +383,7 @@ app.use('/api', (req, res, next) => {
   return requireAdmin(req, res, next);
 });
 
-// ─── Profile API ──────────────────────────────────────────────────────────────
-
-app.get('/api/profile', async (_req, res) => {
-  try {
-    res.json(await readProfile());
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to read profile' });
-  }
-});
-
+// ─── Profile PUT ──────────────────────────────────────────────────────────────
 app.put(
   '/api/profile',
   requireAdmin,
@@ -414,7 +412,7 @@ app.put(
   }
 );
 
-// ─── Projects ────────────────────────────────────────────────────────────────
+// ─── Projects ─────────────────────────────────────────────────────────────────
 app.post(
   '/api/projects',
   upload.fields([
@@ -422,11 +420,16 @@ app.post(
     { name: 'galleryImages', maxCount: 8 },
   ]),
   async (req, res) => {
-    const items = await readItems('projects');
-    const project = buildProject(req.body, req.files, {}, items.length);
-    items.unshift(project);
-    await writeItems('projects', renumber(items));
-    res.status(201).json(project);
+    try {
+      const items = await readItems('projects');
+      const project = buildProject(req.body, req.files, {}, items.length);
+      items.unshift(project);
+      await writeItems('projects', renumber(items));
+      res.status(201).json(project);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to create project' });
+    }
   }
 );
 
@@ -437,12 +440,17 @@ app.put(
     { name: 'galleryImages', maxCount: 8 },
   ]),
   async (req, res) => {
-    const items = await readItems('projects');
-    const index = items.findIndex((item) => item.id === req.params.id);
-    if (index === -1) return res.status(404).json({ message: 'Project not found' });
-    items[index] = buildProject(req.body, req.files, items[index], index);
-    await writeItems('projects', renumber(items));
-    res.json(items[index]);
+    try {
+      const items = await readItems('projects');
+      const index = items.findIndex((item) => item.id === req.params.id);
+      if (index === -1) return res.status(404).json({ message: 'Project not found' });
+      items[index] = buildProject(req.body, req.files, items[index], index);
+      await writeItems('projects', renumber(items));
+      res.json(items[index]);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to update project' });
+    }
   }
 );
 
@@ -454,11 +462,16 @@ app.post(
     { name: 'galleryImages', maxCount: 8 },
   ]),
   async (req, res) => {
-    const items = await readItems('achievements');
-    const achievement = buildAchievement(req.body, req.files, {}, items.length);
-    items.unshift(achievement);
-    await writeItems('achievements', renumber(items));
-    res.status(201).json(achievement);
+    try {
+      const items = await readItems('achievements');
+      const achievement = buildAchievement(req.body, req.files, {}, items.length);
+      items.unshift(achievement);
+      await writeItems('achievements', renumber(items));
+      res.status(201).json(achievement);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to create achievement' });
+    }
   }
 );
 
@@ -469,73 +482,108 @@ app.put(
     { name: 'galleryImages', maxCount: 8 },
   ]),
   async (req, res) => {
-    const items = await readItems('achievements');
-    const index = items.findIndex((item) => item.id === req.params.id);
-    if (index === -1) return res.status(404).json({ message: 'Achievement not found' });
-    items[index] = buildAchievement(req.body, req.files, items[index], index);
-    await writeItems('achievements', renumber(items));
-    res.json(items[index]);
+    try {
+      const items = await readItems('achievements');
+      const index = items.findIndex((item) => item.id === req.params.id);
+      if (index === -1) return res.status(404).json({ message: 'Achievement not found' });
+      items[index] = buildAchievement(req.body, req.files, items[index], index);
+      await writeItems('achievements', renumber(items));
+      res.json(items[index]);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to update achievement' });
+    }
   }
 );
 
 // ─── Certificates ─────────────────────────────────────────────────────────────
 app.post('/api/certificates', upload.single('image'), async (req, res) => {
-  const items = await readItems('certificates');
-  const certificate = buildCertificate(req.body, req.file, {}, items.length);
-  items.unshift(certificate);
-  await writeItems('certificates', renumber(items));
-  res.status(201).json(certificate);
+  try {
+    const items = await readItems('certificates');
+    const certificate = buildCertificate(req.body, req.file, {}, items.length);
+    items.unshift(certificate);
+    await writeItems('certificates', renumber(items));
+    res.status(201).json(certificate);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create certificate' });
+  }
 });
 
 app.put('/api/certificates/:id', upload.single('image'), async (req, res) => {
-  const items = await readItems('certificates');
-  const index = items.findIndex((item) => item.id === req.params.id);
-  if (index === -1) return res.status(404).json({ message: 'Certificate not found' });
-  items[index] = buildCertificate(req.body, req.file, items[index], index);
-  await writeItems('certificates', renumber(items));
-  res.json(items[index]);
+  try {
+    const items = await readItems('certificates');
+    const index = items.findIndex((item) => item.id === req.params.id);
+    if (index === -1) return res.status(404).json({ message: 'Certificate not found' });
+    items[index] = buildCertificate(req.body, req.file, items[index], index);
+    await writeItems('certificates', renumber(items));
+    res.json(items[index]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update certificate' });
+  }
 });
 
 // ─── Blogs ────────────────────────────────────────────────────────────────────
 app.post('/api/blogs', upload.single('coverImage'), async (req, res) => {
-  const items = await readItems('blogs');
-  const blog = buildBlog(req.body, req.file, {}, items.length);
-  items.unshift(blog);
-  await writeItems('blogs', renumber(items));
-  res.status(201).json(blog);
+  try {
+    const items = await readItems('blogs');
+    const blog = buildBlog(req.body, req.file, {}, items.length);
+    items.unshift(blog);
+    await writeItems('blogs', renumber(items));
+    res.status(201).json(blog);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create blog' });
+  }
 });
 
 app.put('/api/blogs/:id', upload.single('coverImage'), async (req, res) => {
-  const items = await readItems('blogs');
-  const index = items.findIndex((item) => item.id === req.params.id);
-  if (index === -1) return res.status(404).json({ message: 'Blog not found' });
-  items[index] = buildBlog(req.body, req.file, items[index], index);
-  await writeItems('blogs', renumber(items));
-  res.json(items[index]);
+  try {
+    const items = await readItems('blogs');
+    const index = items.findIndex((item) => item.id === req.params.id);
+    if (index === -1) return res.status(404).json({ message: 'Blog not found' });
+    items[index] = buildBlog(req.body, req.file, items[index], index);
+    await writeItems('blogs', renumber(items));
+    res.json(items[index]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update blog' });
+  }
 });
 
 // ─── Education ────────────────────────────────────────────────────────────────
 app.post('/api/education', upload.single('logo'), async (req, res) => {
-  const items = await readItems('education');
-  const education = buildEducation(req.body, req.file, {}, items.length);
-  items.unshift(education);
-  await writeItems('education', renumber(items));
-  res.status(201).json(education);
+  try {
+    const items = await readItems('education');
+    const education = buildEducation(req.body, req.file, {}, items.length);
+    items.unshift(education);
+    await writeItems('education', renumber(items));
+    res.status(201).json(education);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create education' });
+  }
 });
 
 app.put('/api/education/:id', upload.single('logo'), async (req, res) => {
-  const items = await readItems('education');
-  const index = items.findIndex((item) => item.id === req.params.id);
-  if (index === -1) return res.status(404).json({ message: 'Education not found' });
-  items[index] = buildEducation(req.body, req.file, items[index], index);
-  await writeItems('education', renumber(items));
-  res.json(items[index]);
+  try {
+    const items = await readItems('education');
+    const index = items.findIndex((item) => item.id === req.params.id);
+    if (index === -1) return res.status(404).json({ message: 'Education not found' });
+    items[index] = buildEducation(req.body, req.file, items[index], index);
+    await writeItems('education', renumber(items));
+    res.json(items[index]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update education' });
+  }
 });
 
 // ─── Reorder ──────────────────────────────────────────────────────────────────
-app.patch('/api/:type/reorder', async (req, res) => {
+app.patch('/api/:type/reorder', requireAdmin, async (req, res) => {
   const { type } = req.params;
-  if (!dataFiles[type]) return res.status(404).json({ message: 'Unknown content type' });
+  if (!COLLECTION_MAP[type]) return res.status(404).json({ message: 'Unknown content type' });
 
   const ids = Array.isArray(req.body?.ids) ? req.body.ids : [];
   const items = await readItems(type);
@@ -547,9 +595,7 @@ app.patch('/api/:type/reorder', async (req, res) => {
     ids.every((id) => byId.has(id));
 
   if (!valid) {
-    return res
-      .status(400)
-      .json({ message: 'Reorder list must include every item id exactly once' });
+    return res.status(400).json({ message: 'Reorder list must include every item id exactly once' });
   }
 
   const next = ids.map((id) => byId.get(id));
@@ -558,17 +604,22 @@ app.patch('/api/:type/reorder', async (req, res) => {
 });
 
 // ─── Delete ───────────────────────────────────────────────────────────────────
-app.delete('/api/:type/:id', async (req, res) => {
+app.delete('/api/:type/:id', requireAdmin, async (req, res) => {
   const { type, id } = req.params;
-  if (!dataFiles[type]) return res.status(404).json({ message: 'Unknown content type' });
+  if (!COLLECTION_MAP[type]) return res.status(404).json({ message: 'Unknown content type' });
 
-  const items = await readItems(type);
-  const next = items.filter((item) => item.id !== id);
-  if (next.length === items.length)
-    return res.status(404).json({ message: 'Item not found' });
+  try {
+    const items = await readItems(type);
+    const next = items.filter((item) => item.id !== id);
+    if (next.length === items.length)
+      return res.status(404).json({ message: 'Item not found' });
 
-  await writeItems(type, renumber(next));
-  res.json({ ok: true });
+    await writeItems(type, renumber(next));
+    res.json({ ok: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete item' });
+  }
 });
 
 // ─── Error Handler ────────────────────────────────────────────────────────────
@@ -581,7 +632,7 @@ app.use((error, _req, res, _next) => {
 });
 
 app.listen(port, () => {
-  console.log(`Admin API running on http://localhost:${port}`);
+  console.log(`✅ Admin API running on http://localhost:${port}`);
   if (cloudinaryConfigured) {
     console.log(`☁️  Cloudinary storage: ${process.env.CLOUDINARY_CLOUD_NAME}`);
   }
