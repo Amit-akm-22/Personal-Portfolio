@@ -48,6 +48,7 @@ const dataFiles = {
   blogs: path.join(dataDir, 'blogs.json'),
   education: path.join(dataDir, 'education.json'),
   sessions: path.join(dataDir, 'sessions.json'),
+  profile: path.join(dataDir, 'profile.json'),
 };
 
 await fs.mkdir(dataDir, { recursive: true });
@@ -65,11 +66,26 @@ await Promise.all(Object.values(dataFiles).map(ensureJson));
 // ─── Session Persistence ──────────────────────────────────────────────────────
 async function loadSessions() {
   try {
-    const raw = await fs.readFile(dataFiles.sessions, 'utf8');
-    const arr = JSON.parse(raw);
-    if (Array.isArray(arr)) arr.forEach((t) => adminSessions.add(t));
+    const data = await fs.readFile(dataFiles.sessions, 'utf8');
+    const saved = JSON.parse(data);
+    saved.forEach((token) => adminSessions.add(token));
+  } catch {}
+
+  try {
+    await fs.access(dataFiles.profile);
   } catch {
-    // ignore
+    await fs.writeFile(
+      dataFiles.profile,
+      JSON.stringify({
+        githubUrl: 'https://github.com/Amit-akm-22',
+        githubImage: '',
+        linkedinUrl: 'https://www.linkedin.com/in/amit-manmode-5b1a23328',
+        linkedinImage: '',
+        email: 'amit.akm.work@gmail.com',
+        phone: '+91 83057-21431'
+      }, null, 2),
+      'utf8'
+    );
   }
 }
 
@@ -137,6 +153,12 @@ const readItems = async (type) =>
 
 const writeItems = async (type, items) =>
   fs.writeFile(dataFiles[type], JSON.stringify(items, null, 2), 'utf8');
+
+const readProfile = async () =>
+  JSON.parse(await fs.readFile(dataFiles.profile, 'utf8'));
+
+const writeProfile = async (profile) =>
+  fs.writeFile(dataFiles.profile, JSON.stringify(profile, null, 2), 'utf8');
 
 // ─── String Utilities ─────────────────────────────────────────────────────────
 const slugify = (value) =>
@@ -347,15 +369,20 @@ app.post('/api/auth/logout', requireAdmin, async (req, res) => {
 
 // ─── Public Read Routes ───────────────────────────────────────────────────────
 app.get('/api/content', async (_req, res) => {
-  const [projects, achievements, certificates, blogs, education] =
-    await Promise.all([
-      readItems('projects'),
-      readItems('achievements'),
-      readItems('certificates'),
-      readItems('blogs'),
-      readItems('education'),
-    ]);
-  res.json({ projects, achievements, certificates, blogs, education });
+  try {
+    const [projects, achievements, certificates, blogs, education, profile] =
+      await Promise.all([
+        readItems('projects'),
+        readItems('achievements'),
+        readItems('certificates'),
+        readItems('blogs'),
+        readItems('education'),
+        readProfile(),
+      ]);
+    res.json({ projects, achievements, certificates, blogs, education, profile });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load content' });
+  }
 });
 
 app.get('/api/:type', async (req, res) => {
@@ -369,6 +396,44 @@ app.use('/api', (req, res, next) => {
   if (req.method === 'GET' || req.path.startsWith('/auth/')) return next();
   return requireAdmin(req, res, next);
 });
+
+// ─── Profile API ──────────────────────────────────────────────────────────────
+
+app.get('/api/profile', async (_req, res) => {
+  try {
+    res.json(await readProfile());
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read profile' });
+  }
+});
+
+app.put(
+  '/api/profile',
+  requireAdmin,
+  upload.fields([
+    { name: 'githubImage', maxCount: 1 },
+    { name: 'linkedinImage', maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const currentProfile = await readProfile();
+      const newProfile = { ...currentProfile, ...req.body };
+
+      if (req.files?.githubImage?.[0]) {
+        newProfile.githubImage = uploadUrl(req.files.githubImage[0]);
+      }
+      if (req.files?.linkedinImage?.[0]) {
+        newProfile.linkedinImage = uploadUrl(req.files.linkedinImage[0]);
+      }
+
+      await writeProfile(newProfile);
+      res.json(newProfile);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
+  }
+);
 
 // ─── Projects ────────────────────────────────────────────────────────────────
 app.post(

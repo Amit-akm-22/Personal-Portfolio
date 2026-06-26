@@ -22,11 +22,12 @@ import {
   Trophy,
   Award,
   X,
+  User,
 } from 'lucide-react';
-import { AuthError, clearAdminToken, createContent, deleteContent, getAdminToken, getPortfolioContent, loginAdmin, reorderContent, updateContent } from '../lib/api';
+import { AuthError, clearAdminToken, createContent, deleteContent, getAdminToken, getPortfolioContent, loginAdmin, reorderContent, updateContent, updateProfile } from '../lib/api';
 import { normalizeTechTags } from '../lib/tech';
 
-type ContentType = 'projects' | 'achievements' | 'certificates' | 'education';
+type ContentType = 'projects' | 'achievements' | 'certificates' | 'education' | 'profile';
 type AdminItem = Record<string, any>;
 
 const sections = [
@@ -34,6 +35,7 @@ const sections = [
   { type: 'achievements' as const, label: 'Achievements', single: 'Achievement', icon: Trophy },
   { type: 'certificates' as const, label: 'Certificates', single: 'Certificate', icon: Award },
   { type: 'education' as const, label: 'Education', single: 'Education', icon: GraduationCap },
+  { type: 'profile' as const, label: 'Profile / Contact', single: 'Profile', icon: User },
 ];
 
 const inputClass =
@@ -98,6 +100,7 @@ const FileField = ({ label, name, multiple = false }: { label: string; name: str
 const AdminPage = () => {
   const [authenticated, setAuthenticated] = useState(() => Boolean(getAdminToken()));
   const [activeType, setActiveType] = useState<ContentType>('projects');
+  const [profile, setProfile] = useState<any>(null);
   const [content, setContent] = useState<Record<ContentType, AdminItem[]>>({
     projects: [],
     achievements: [],
@@ -115,7 +118,7 @@ const AdminPage = () => {
 
   const activeSection = sections.find((section) => section.type === activeType)!;
   const ActiveIcon = activeSection.icon;
-  const activeItems = content[activeType];
+  const activeItems = activeType === 'profile' ? [] : content[activeType as keyof typeof content] || [];
   const visibleItems = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return activeItems;
@@ -133,6 +136,7 @@ const AdminPage = () => {
       certificates: nextContent.certificates,
       education: nextContent.education,
     });
+    setProfile(nextContent.profile);
     setLoading(false);
   };
 
@@ -375,13 +379,15 @@ const AdminPage = () => {
               <button className="flex h-10 items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 text-xs font-black uppercase tracking-wider text-emerald-300">
                 <Database size={17} /> JSON DB
               </button>
-              <button
-                onClick={openNew}
-                className="grid h-10 w-11 place-items-center rounded-xl bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.35)] transition hover:bg-blue-500"
-                aria-label={`Add ${activeSection.single}`}
-              >
-                <Plus size={20} />
-              </button>
+              {activeType !== 'profile' && (
+                <button
+                  onClick={openNew}
+                  className="grid h-10 w-11 place-items-center rounded-xl bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.35)] transition hover:bg-blue-500"
+                  aria-label={`Add ${activeSection.single}`}
+                >
+                  <Plus size={20} />
+                </button>
+              )}
               <button
                 onClick={logout}
                 className="grid h-10 w-10 place-items-center rounded-xl border border-red-400/20 bg-red-500/10 text-red-200 transition hover:bg-red-500/15"
@@ -405,7 +411,7 @@ const AdminPage = () => {
                     selected ? 'border-blue-400 text-white' : 'border-transparent text-white/35 hover:text-white/70'
                   }`}
                 >
-                  <Icon size={15} /> {section.label} <span>{content[section.type].length}</span>
+                  <Icon size={15} /> {section.label} {section.type !== 'profile' && <span>{content[section.type as keyof typeof content]?.length || 0}</span>}
                 </button>
               );
             })}
@@ -419,7 +425,9 @@ const AdminPage = () => {
             </div>
           )}
 
-          {loading ? (
+          {activeType === 'profile' ? (
+            <ProfileForm profile={profile} onSaved={loadContent} />
+          ) : loading ? (
             <div className="grid min-h-[420px] place-items-center rounded-3xl border border-white/[0.08] bg-white/[0.02] text-white/50">
               <span className="flex items-center gap-3">
                 <Loader2 className="animate-spin" size={20} /> Loading content
@@ -753,5 +761,47 @@ const EducationFields = ({ item }: { item?: AdminItem }) => (
     </div>
   </div>
 );
+
+const ProfileForm = ({ profile, onSaved }: { profile: any; onSaved: () => void }) => {
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState('');
+
+  const submitProfile = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    setStatus('');
+    try {
+      const formData = new FormData(e.currentTarget);
+      await updateProfile(formData);
+      setStatus('Profile updated successfully!');
+      onSaved();
+    } catch (err: any) {
+      setStatus('Error: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submitProfile} className="relative z-10 mx-auto w-full max-w-3xl rounded-3xl border border-white/[0.08] bg-[#14151A] p-7 shadow-[0_24px_58px_rgba(0,0,0,0.6)] sm:p-10">
+      <h2 className="mb-6 text-xl font-black">Profile & Contact Settings</h2>
+      {status && <div className="mb-6 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 text-sm text-white/70">{status}</div>}
+      <div className="grid gap-5 md:grid-cols-2">
+        <Field label="Email Address" name="email" defaultValue={profile?.email} />
+        <Field label="Phone Number" name="phone" defaultValue={profile?.phone} />
+        <Field label="GitHub URL" name="githubUrl" defaultValue={profile?.githubUrl} />
+        <FileField label={profile?.githubImage ? 'Replace GitHub Image' : 'GitHub Image'} name="githubImage" />
+        <Field label="LinkedIn URL" name="linkedinUrl" defaultValue={profile?.linkedinUrl} />
+        <FileField label={profile?.linkedinImage ? 'Replace LinkedIn Image' : 'LinkedIn Image'} name="linkedinImage" />
+      </div>
+      <div className="mt-7 flex justify-end border-t border-white/[0.08] pt-5">
+        <button disabled={saving} className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-[0_14px_35px_rgba(37,99,235,0.3)] transition hover:bg-blue-500 disabled:opacity-60">
+          {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+          Save Profile
+        </button>
+      </div>
+    </form>
+  );
+};
 
 export default AdminPage;
