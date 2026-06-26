@@ -87,17 +87,18 @@ await loadSessions();
 // Images go to Cloudinary → portfolio_uploads folder
 const cloudinaryStorage = new CloudinaryStorage({
   cloudinary,
-  params: (_req, file) => ({
-    folder: 'portfolio_uploads',
-    // Keep original file base name (sanitised) as public_id so URLs are stable-ish
-    public_id: `${Date.now()}-${file.originalname
-      .replace(/\.[^.]+$/, '')
-      .replace(/[^a-zA-Z0-9]/g, '-')}`,
-    // Cloudinary will pick the right format automatically
-    format: undefined,
-    // Auto quality & transformations
-    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-  }),
+  params: async (_req, file) => {
+    if (!cloudinaryConfigured) {
+      throw new Error('Cloudinary environment variables are missing on Render. Please add them in the Render Dashboard.');
+    }
+    return {
+      folder: 'portfolio_uploads',
+      public_id: `${Date.now()}-${file.originalname
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-zA-Z0-9]/g, '-')}`,
+      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+    };
+  },
 });
 
 const upload = multer({ storage: cloudinaryStorage });
