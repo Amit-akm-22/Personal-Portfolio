@@ -30,8 +30,16 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-await mongoose.connect(MONGODB_URI, { dbName: 'portfolio' });
-console.log('✅ Connected to MongoDB Atlas');
+try {
+  await mongoose.connect(MONGODB_URI, { dbName: 'portfolio', serverSelectionTimeoutMS: 5000 });
+  console.log('✅ Connected to MongoDB Atlas');
+} catch (error) {
+  console.error('\n❌ MongoDB Connection Failed!');
+  console.error('   This usually happens because your IP is not whitelisted in MongoDB Atlas.');
+  console.error('   Go to cloud.mongodb.com -> Network Access -> Add IP Address -> Allow Access from Anywhere (0.0.0.0/0)');
+  console.error('\n   Raw Error:', error.message);
+  process.exit(1);
+}
 
 // ─── MongoDB Schemas ──────────────────────────────────────────────────────────
 const itemSchema = new mongoose.Schema({}, { strict: false, timestamps: true });
