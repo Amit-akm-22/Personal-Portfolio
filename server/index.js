@@ -42,7 +42,9 @@ try {
 }
 
 // ─── MongoDB Schemas ──────────────────────────────────────────────────────────
-const itemSchema = new mongoose.Schema({}, { strict: false, timestamps: true });
+const itemSchema = new mongoose.Schema({
+  id: String
+}, { strict: false, timestamps: true, id: false });
 
 const Project     = mongoose.model('Project',     itemSchema, 'projects');
 const Achievement = mongoose.model('Achievement', itemSchema, 'achievements');
