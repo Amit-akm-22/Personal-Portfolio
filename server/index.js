@@ -204,10 +204,14 @@ const buildProject = (body, files = {}, existing = {}, count = 0) => {
   const galleryImages = uploadedUrls(files?.galleryImages);
   const name = body.name || existing.name || 'Untitled Project';
   const nextHero = heroImage || existing.heroImage || galleryImages[0] || '';
+  const existingGalleryInput = body.existingGalleryImages 
+    ? (Array.isArray(body.existingGalleryImages) ? body.existingGalleryImages : [body.existingGalleryImages]) 
+    : existing.galleryImages || (nextHero ? [nextHero] : []);
+
   const nextGallery =
     galleryImages.length
-      ? galleryImages
-      : existing.galleryImages || (nextHero ? [nextHero] : []);
+      ? [...existingGalleryInput, ...galleryImages].slice(0, 8)
+      : existingGalleryInput;
 
   return {
     ...existing,
@@ -236,10 +240,14 @@ const buildAchievement = (body, files = {}, existing = {}, count = 0) => {
   const galleryImages = uploadedUrls(files?.galleryImages);
   const title = body.title || existing.title || 'Untitled Achievement';
   const nextImage = image || existing.image || galleryImages[0] || '';
+  const existingGalleryInput = body.existingGalleryImages 
+    ? (Array.isArray(body.existingGalleryImages) ? body.existingGalleryImages : [body.existingGalleryImages]) 
+    : existing.galleryImages || (nextImage ? [nextImage] : []);
+
   const nextGallery =
     galleryImages.length
-      ? galleryImages
-      : existing.galleryImages || (nextImage ? [nextImage] : []);
+      ? [...existingGalleryInput, ...galleryImages].slice(0, 8)
+      : existingGalleryInput;
 
   return {
     ...existing,

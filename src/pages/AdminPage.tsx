@@ -97,6 +97,35 @@ const FileField = ({ label, name, multiple = false }: { label: string; name: str
   </label>
 );
 
+const GalleryManager = ({ images = [] }: { images?: string[] }) => {
+  const [gallery, setGallery] = useState<string[]>(images);
+  
+  if (!images.length) return null;
+
+  return (
+    <div className="flex flex-col gap-3 mb-2">
+      <span className={labelClass}>Existing Gallery Images</span>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {gallery.map((url, i) => (
+          <div key={i} className="group relative aspect-video overflow-hidden rounded-lg border border-white/10 bg-black">
+            <img src={url} alt={`Gallery ${i}`} className="h-full w-full object-cover opacity-60 transition group-hover:opacity-100" />
+            <button
+              type="button"
+              onClick={() => setGallery(g => g.filter((_, idx) => idx !== i))}
+              className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded bg-red-500/80 text-white opacity-0 transition hover:bg-red-500 group-hover:opacity-100"
+              title="Remove image"
+            >
+              <X size={14} />
+            </button>
+            <input type="hidden" name="existingGalleryImages" value={url} />
+          </div>
+        ))}
+      </div>
+      {gallery.length === 0 && <p className="text-xs text-white/40">All existing images removed.</p>}
+    </div>
+  );
+};
+
 const AdminPage = () => {
   const [authenticated, setAuthenticated] = useState(() => Boolean(getAdminToken()));
   const [activeType, setActiveType] = useState<ContentType>('projects');
@@ -693,7 +722,8 @@ const ProjectFields = ({ item }: { item?: AdminItem }) => (
     <Field label="Accent Color" name="accent" placeholder="#7EB8F7" defaultValue={item?.accent} />
     <FileField label={item?.heroImage ? 'Replace Hero Image' : 'Hero Image'} name="heroImage" />
     <div className="md:col-span-2">
-      <FileField label={item?.galleryImages?.length ? 'Replace Gallery Images' : 'Gallery Images'} name="galleryImages" multiple />
+      <GalleryManager images={item?.galleryImages} />
+      <FileField label="Add New Gallery Images" name="galleryImages" multiple />
     </div>
     <div className="md:col-span-2">
       <TextArea label="Description" name="description" placeholder="Short project summary" defaultValue={item?.description} />
@@ -718,7 +748,8 @@ const AchievementFields = ({ item }: { item?: AdminItem }) => (
       <FileField label={item?.image ? 'Replace Image' : 'Image'} name="image" />
     </div>
     <div className="md:col-span-2">
-      <FileField label={item?.galleryImages?.length ? 'Replace Gallery Images' : 'Gallery Images'} name="galleryImages" multiple />
+      <GalleryManager images={item?.galleryImages} />
+      <FileField label="Add New Gallery Images" name="galleryImages" multiple />
     </div>
     <div className="md:col-span-2">
       <TextArea label="Summary" name="summary" placeholder="Short card summary" defaultValue={item?.summary} />
