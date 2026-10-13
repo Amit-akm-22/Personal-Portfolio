@@ -2,7 +2,7 @@ import FadeIn from './FadeIn';
 import ContactButton from './ContactButton';
 
 const ABOUT_TEXT =
-  'Second-year B.Tech Computer Science student passionate about software development, problem solving, and building impactful digital experiences. Skilled in Data Structures, Algorithms, Object-Oriented Programming, and C++, with hands-on experience in developing user-focused applications and exploring scalable system design. Enthusiastic about creating clean, efficient, and intuitive solutions while collaborating with teams to turn ideas into real-world projects.';
+  'Third-year B.Tech Computer Science student passionate about software development, problem solving, and building impactful digital experiences. Skilled in Data Structures, Algorithms, Object-Oriented Programming, and C++, with hands-on experience in developing user-focused applications and exploring scalable system design. Enthusiastic about creating clean, efficient, and intuitive solutions while collaborating with teams to turn ideas into real-world projects.';
 
 const iconUrl = (path: string) =>
   `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${path}`;
@@ -49,6 +49,8 @@ const skillGroups = [
       { name: 'Bootstrap', icon: iconUrl('bootstrap/bootstrap-original.svg') },
       { name: 'Socket.IO', icon: iconUrl('socketio/socketio-original.svg') },
       { name: 'EJS', icon: iconUrl('embeddedc/embeddedc-original.svg') },
+      { name: 'LangChain', icon: 'https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/langchain.svg' },
+      { name: 'RAG', icon: 'https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/semanticweb.svg' },
     ],
   },
   {
@@ -66,23 +68,23 @@ const skillGroups = [
 ];
 
 const SkillCard = ({ name, icon }: { name: string; icon: string }) => {
-  const monochromeIcon = name === 'JWT' || name === 'Cloudinary';
+  const monochromeIcon = name === 'JWT' || name === 'Cloudinary' || name === 'LangChain' || name === 'RAG';
 
   return (
-  <div className="group flex h-[104px] w-[100px] shrink-0 flex-col items-center justify-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.035] px-2 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.065] hover:shadow-[0_18px_42px_rgba(0,0,0,0.28)]">
-    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-      <img
-        src={icon}
-        alt={name}
-        className={`h-9 w-9 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)] ${monochromeIcon ? 'invert opacity-85' : ''}`}
-        loading="lazy"
-        draggable={false}
-      />
+    <div className="group flex h-[104px] w-[100px] shrink-0 flex-col items-center justify-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.035] px-2 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.065] hover:shadow-[0_18px_42px_rgba(0,0,0,0.28)]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-black/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+        <img
+          src={icon}
+          alt={name}
+          className={`h-9 w-9 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)] ${monochromeIcon ? 'invert opacity-85' : ''}`}
+          loading="lazy"
+          draggable={false}
+        />
+      </div>
+      <span className="max-w-full text-center text-[11px] font-semibold leading-tight text-[#D7E2EA]/70 transition-colors group-hover:text-[#D7E2EA]">
+        {name}
+      </span>
     </div>
-    <span className="max-w-full text-center text-[11px] font-semibold leading-tight text-[#D7E2EA]/70 transition-colors group-hover:text-[#D7E2EA]">
-      {name}
-    </span>
-  </div>
   );
 };
 
