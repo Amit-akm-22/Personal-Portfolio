@@ -1,15 +1,10 @@
-import { useEffect, useState } from 'react';
 import FadeIn from './FadeIn';
-import { EDUCATION } from '../data/education';
-import { getPortfolioContent } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 import { GraduationCap } from 'lucide-react';
 
 const EducationSection = () => {
-  const [education, setEducation] = useState<typeof EDUCATION>([]);
-
-  useEffect(() => {
-    getPortfolioContent().then((content) => setEducation(content.education));
-  }, []);
+  const { content } = useContent();
+  const education = content.education;
 
   return (
     <section

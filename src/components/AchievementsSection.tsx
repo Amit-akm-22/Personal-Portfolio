@@ -1,15 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FadeIn from './FadeIn';
-import { ACHIEVEMENTS } from '../data/achievements';
-import { getPortfolioContent } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 
 const AchievementsSection = () => {
-  const [achievements, setAchievements] = useState<typeof ACHIEVEMENTS>([]);
-
-  useEffect(() => {
-    getPortfolioContent().then((content) => setAchievements(content.achievements));
-  }, []);
+  const { content } = useContent();
+  const achievements = content.achievements;
 
   return (
     <section

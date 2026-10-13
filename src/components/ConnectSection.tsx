@@ -1,16 +1,13 @@
-import { useEffect, useState, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { Mail, Phone, Send, Loader2 } from 'lucide-react';
 import FadeIn from './FadeIn';
-import { getPortfolioContent, ProfileData } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 
 const ConnectSection = () => {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const { content } = useContent();
+  const profile = content.profile;
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState('');
-
-  useEffect(() => {
-    getPortfolioContent().then((content) => setProfile(content.profile));
-  }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,7 +27,6 @@ const ConnectSection = () => {
     }, 800);
   };
 
-  if (!profile) return null;
 
   return (
     <section className="relative z-10 w-full min-h-screen bg-[#111111] px-4 sm:px-6 md:px-10 pt-16 sm:pt-20 md:pt-24 pb-20">
@@ -145,8 +141,8 @@ const ConnectSection = () => {
                     <Mail size={24} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D7E2EA]/30 mb-1">Email Address</p>
-                    <p className="text-base sm:text-lg font-bold text-[#D7E2EA] tracking-wide transition-colors group-hover:text-[#7EB8F7]">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-[#D7E2EA]/40 mb-1">Email Address</p>
+                    <p className="text-sm sm:text-base font-light text-[#D7E2EA] tracking-wide transition-colors group-hover:text-[#7EB8F7]">
                       {profile?.email || 'Loading...'}
                     </p>
                   </div>
@@ -157,8 +153,8 @@ const ConnectSection = () => {
                     <Phone size={24} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D7E2EA]/30 mb-1">Phone Number</p>
-                    <p className="text-base sm:text-lg font-bold text-[#D7E2EA] tracking-wide transition-colors group-hover:text-[#7EB8F7]">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-[#D7E2EA]/40 mb-1">Phone Number</p>
+                    <p className="text-sm sm:text-base font-light text-[#D7E2EA] tracking-wide transition-colors group-hover:text-[#7EB8F7]">
                       {profile?.phone || 'Loading...'}
                     </p>
                   </div>
@@ -173,35 +169,35 @@ const ConnectSection = () => {
                 <div className="flex flex-col gap-6">
                   
                   <label className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D7E2EA]/40">Your Name</span>
+                    <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[#D7E2EA]/40">Your Name</span>
                     <input 
                       required
                       name="name"
                       type="text" 
                       placeholder="Full Name" 
-                      className="w-full rounded-xl border border-white/[0.06] bg-black px-5 py-4 text-sm font-medium text-[#D7E2EA] placeholder:text-[#D7E2EA]/20 outline-none transition focus:border-[#7EB8F7]/50 focus:bg-[#111111]"
+                      className="w-full rounded-xl border border-white/[0.06] bg-black px-5 py-4 text-sm font-light text-[#D7E2EA] placeholder:text-[#D7E2EA]/20 outline-none transition focus:border-[#7EB8F7]/50 focus:bg-[#111111]"
                     />
                   </label>
 
                   <label className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D7E2EA]/40">Your Email</span>
+                    <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[#D7E2EA]/40">Your Email</span>
                     <input 
                       required
                       name="email"
                       type="email" 
                       placeholder="email@address.com" 
-                      className="w-full rounded-xl border border-white/[0.06] bg-black px-5 py-4 text-sm font-medium text-[#D7E2EA] placeholder:text-[#D7E2EA]/20 outline-none transition focus:border-[#7EB8F7]/50 focus:bg-[#111111]"
+                      className="w-full rounded-xl border border-white/[0.06] bg-black px-5 py-4 text-sm font-light text-[#D7E2EA] placeholder:text-[#D7E2EA]/20 outline-none transition focus:border-[#7EB8F7]/50 focus:bg-[#111111]"
                     />
                   </label>
 
                   <label className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D7E2EA]/40">Your Message</span>
+                    <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[#D7E2EA]/40">Your Message</span>
                     <textarea 
                       required
                       name="message"
                       rows={4}
                       placeholder="How can I help you?" 
-                      className="w-full resize-y rounded-xl border border-white/[0.06] bg-black px-5 py-4 text-sm font-medium leading-relaxed text-[#D7E2EA] placeholder:text-[#D7E2EA]/20 outline-none transition focus:border-[#7EB8F7]/50 focus:bg-[#111111]"
+                      className="w-full resize-y rounded-xl border border-white/[0.06] bg-black px-5 py-4 text-sm font-light leading-relaxed text-[#D7E2EA] placeholder:text-[#D7E2EA]/20 outline-none transition focus:border-[#7EB8F7]/50 focus:bg-[#111111]"
                     />
                   </label>
 
@@ -209,7 +205,7 @@ const ConnectSection = () => {
                     <button 
                       type="submit"
                       disabled={sending}
-                      className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#D7E2EA] px-6 py-4 text-xs font-black uppercase tracking-widest text-[#111111] transition-all hover:opacity-90 disabled:opacity-70"
+                      className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#D7E2EA] px-6 py-4 text-xs font-semibold uppercase tracking-widest text-[#111111] transition-all hover:opacity-90 disabled:opacity-70"
                     >
                       {sending ? (
                         <>

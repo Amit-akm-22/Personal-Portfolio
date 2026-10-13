@@ -1,20 +1,12 @@
-import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import FadeIn from '../components/FadeIn';
-import { CERTIFICATES } from '../data/certificates';
-import { getPortfolioContent } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 
 const CertificateDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [certificates, setCertificates] = useState<typeof CERTIFICATES>([]);
-  const [loading, setLoading] = useState(true);
+  const { content, loading } = useContent();
+  const certificates = content.certificates;
   const certificate = certificates.find((item) => item.id === id);
-
-  useEffect(() => {
-    getPortfolioContent()
-      .then((content) => setCertificates(content.certificates))
-      .finally(() => setLoading(false));
-  }, []);
 
   if (!certificate && loading) {
     return <main className="flex min-h-screen items-center justify-center bg-[#0C0C0C] text-white">Loading...</main>;

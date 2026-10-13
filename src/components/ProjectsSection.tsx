@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FadeIn from './FadeIn';
-import { PROJECTS } from '../data/projects';
-import { getPortfolioContent } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 import { normalizeTechTags } from '../lib/tech';
 
 const ExternalLinkIcon = () => (
@@ -12,11 +10,8 @@ const ExternalLinkIcon = () => (
 );
 
 const ProjectsSection = () => {
-  const [projects, setProjects] = useState<typeof PROJECTS>([]);
-
-  useEffect(() => {
-    getPortfolioContent().then((content) => setProjects(content.projects));
-  }, []);
+  const { content } = useContent();
+  const projects = content.projects;
 
   return (
     <section

@@ -1,15 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FadeIn from './FadeIn';
-import { CERTIFICATES } from '../data/certificates';
-import { getPortfolioContent } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 
 const CertificatesSection = () => {
-  const [certificates, setCertificates] = useState<typeof CERTIFICATES>([]);
-
-  useEffect(() => {
-    getPortfolioContent().then((content) => setCertificates(content.certificates));
-  }, []);
+  const { content } = useContent();
+  const certificates = content.certificates;
 
   return (
     <section

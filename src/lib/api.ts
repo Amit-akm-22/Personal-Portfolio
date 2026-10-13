@@ -83,22 +83,18 @@ export async function loginAdmin(username: string, password: string) {
 }
 
 export async function getPortfolioContent(): Promise<PortfolioContent> {
-  try {
-    const response = await fetch(`${API_BASE}/api/content`);
-    if (!response.ok) throw new Error('Content request failed');
+  const response = await fetch(`${API_BASE}/api/content`);
+  if (!response.ok) throw new Error('Content request failed');
 
-    const content = await response.json();
-    return {
-      projects: Array.isArray(content.projects) ? content.projects : PROJECTS,
-      achievements: Array.isArray(content.achievements) ? content.achievements : ACHIEVEMENTS,
-      certificates: Array.isArray(content.certificates) ? content.certificates : CERTIFICATES,
-      blogs: Array.isArray(content.blogs) ? content.blogs : BLOGS,
-      education: Array.isArray(content.education) ? content.education : EDUCATION,
-      profile: content.profile || fallbackContent.profile,
-    };
-  } catch {
-    return fallbackContent;
-  }
+  const content = await response.json();
+  return {
+    projects: Array.isArray(content.projects) ? content.projects : PROJECTS,
+    achievements: Array.isArray(content.achievements) ? content.achievements : ACHIEVEMENTS,
+    certificates: Array.isArray(content.certificates) ? content.certificates : CERTIFICATES,
+    blogs: Array.isArray(content.blogs) ? content.blogs : BLOGS,
+    education: Array.isArray(content.education) ? content.education : EDUCATION,
+    profile: content.profile || fallbackContent.profile,
+  };
 }
 
 export async function createContent(type: 'projects' | 'achievements' | 'certificates' | 'blogs' | 'education', formData: FormData) {

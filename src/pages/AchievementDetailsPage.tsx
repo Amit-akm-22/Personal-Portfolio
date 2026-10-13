@@ -1,24 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import FadeIn from '../components/FadeIn';
-import { ACHIEVEMENTS } from '../data/achievements';
-import { getPortfolioContent } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 
 const AchievementDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [achievements, setAchievements] = useState<typeof ACHIEVEMENTS>([]);
-  const [loading, setLoading] = useState(true);
+  const { content, loading } = useContent();
+  const achievements = content.achievements;
   const achievement = achievements.find((item) => item.id === id);
   const [activeImage, setActiveImage] = useState(0);
   const galleryImages = achievement
     ? Array.from(new Set([achievement.image, ...(achievement.galleryImages || [])].filter(Boolean)))
     : [];
-
-  useEffect(() => {
-    getPortfolioContent()
-      .then((content) => setAchievements(content.achievements))
-      .finally(() => setLoading(false));
-  }, []);
 
   useEffect(() => {
     setActiveImage(0);

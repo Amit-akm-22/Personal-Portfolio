@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { PROJECTS } from '../data/projects';
 import FadeIn from '../components/FadeIn';
-import { getPortfolioContent } from '../lib/api';
+import { useContent } from '../lib/ContentContext';
 import { normalizeTechTags } from '../lib/tech';
 
 const ProjectDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const [projects, setProjects] = useState<typeof PROJECTS>([]);
-  const [loading, setLoading] = useState(true);
+  const { content, loading } = useContent();
+  const projects = content.projects;
   const project = projects.find((p) => p.id === id);
 
   const [activeImage, setActiveImage] = useState(0);
@@ -16,12 +15,6 @@ const ProjectDetailsPage = () => {
     ? Array.from(new Set([project.heroImage, ...(project.galleryImages || [])].filter(Boolean)))
     : [];
   const techTags = project ? normalizeTechTags(project.tech) : [];
-
-  useEffect(() => {
-    getPortfolioContent()
-      .then((content) => setProjects(content.projects))
-      .finally(() => setLoading(false));
-  }, []);
 
   if (!project && loading) {
     return <div className="min-h-screen bg-[#0C0C0C] text-white flex items-center justify-center">Loading...</div>;
